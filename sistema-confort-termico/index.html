@@ -1,0 +1,3328 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AECSA S.A.S. — Sistema de Confort Térmico Inteligente con IoT</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts para soporte de tipografía secundaria y manuscrita de AECSA -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              aecsa: {
+                green: "#C0DD17" /* Hoja de árbol en primavera */,
+                greenDark: "#A4BE00" /* Tono verde de contraste */,
+                navy: "#012030" /* Cielo nocturno (Lead color 75%) */,
+                snow: "#FFFFFF" /* Nieve */,
+                orange: "#F05C05" /* Atardecer (Acento térmico / Alertas) */,
+                grayAlt: "#F4F5F6" /* Gris manual frío (Off-white) */,
+                grayMuted: "#6B7886" /* Gris de cuerpo de texto */,
+                border: "#E3E7EB" /* Borde de diseño */,
+                borderStrong: "#C8CFD6" /* Borde de contraste */,
+              },
+            },
+            fontFamily: {
+              display: ['"Jost"', "system-ui", "sans-serif"],
+              body: ['"Jost"', "system-ui", "sans-serif"],
+              script: ['"Pacifico"', "cursive"],
+              caveat: ['"Caveat"', "cursive"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* Inyección directa de tokens de AECSA Design System */
+      :root {
+        --aecsa-green: #c0dd17;
+        --aecsa-navy: #012030;
+        --aecsa-snow: #ffffff;
+        --aecsa-orange: #f05c05;
+        --color-bg-alt: #f4f5f6;
+        --color-fg-muted: #6b7886;
+        --color-border: #e3e7eb;
+      }
+
+      body {
+        font-family: "Jost", "Inter", sans-serif;
+        background-color: var(--aecsa-snow);
+        color: var(--aecsa-navy);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Estilo Eyebrow Oficial del Manual de Identidad de AECSA */
+      .aecsa-eyebrow {
+        font-family: "Jost", sans-serif;
+        font-weight: 700;
+        color: #a4be00;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .aecsa-eyebrow::before {
+        content: "▸";
+        color: var(--aecsa-green);
+      }
+
+      /* Estilo de Firma manuscrita para Taglines de AECSA */
+      .aecsa-tagline {
+        font-family: "Pacifico", cursive;
+        font-weight: 500;
+        color: var(--aecsa-green);
+      }
+
+      /* Estilización plana del slider con acentos de marca */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #e3e7eb;
+        border-radius: 999px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--aecsa-navy);
+        border: 3px solid var(--aecsa-green);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+      }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 6px rgba(192, 221, 23, 0.3);
+      }
+      /* ----- Chatbot Widget ----- */
+      #chat-widget-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #4f46e5;
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: transform 0.2s ease;
+      }
+      #chat-widget-btn:hover {
+        transform: scale(1.06);
+      }
+      #chat-widget-btn svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      #chat-widget-panel {
+        position: fixed;
+        bottom: 96px;
+        right: 24px;
+        width: 340px;
+        max-width: calc(100vw - 32px);
+        height: 460px;
+        max-height: calc(100vh - 140px);
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 9999;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      #chat-widget-panel.open {
+        display: flex;
+      }
+
+      #chat-widget-header {
+        background: #4f46e5;
+        color: white;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      #chat-widget-header .title {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      #chat-widget-header .subtitle {
+        font-size: 11px;
+        opacity: 0.85;
+      }
+      #chat-widget-close {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px;
+      }
+
+      #chat-widget-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        background: #f8f9fb;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .chat-msg {
+        max-width: 85%;
+        padding: 9px 12px;
+        border-radius: 12px;
+        font-size: 13.5px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .chat-msg.bot {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .chat-msg.user {
+        background: #4f46e5;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .chat-msg.typing {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        align-self: flex-start;
+        color: #9ca3af;
+        font-style: italic;
+      }
+
+      #chat-widget-form {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid #eee;
+        background: white;
+        flex-shrink: 0;
+      }
+      #chat-widget-input {
+        flex: 1;
+        border: 1px solid #e0e0e0;
+        border-radius: 20px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        outline: none;
+      }
+      #chat-widget-input:focus {
+        border-color: #4f46e5;
+      }
+      #chat-widget-send {
+        background: #4f46e5;
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #chat-widget-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 420px) {
+        #chat-widget-panel {
+          right: 16px;
+          bottom: 88px;
+          width: calc(100vw - 32px);
+        }
+        #chat-widget-btn {
+          right: 16px;
+          bottom: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen flex flex-col selection:bg-aecsa-green selection:text-aecsa-navy"
+  >
+    <!-- GLOSARIO TÉCNICO FLOTANTE -->
+    <div
+      id="glossary-modal"
+      class="fixed inset-0 bg-aecsa-navy/70 backdrop-blur-sm z-50 flex items-center justify-center hidden transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-2xl w-full p-8 m-4 shadow-2xl relative border-t-8 border-aecsa-green"
+      >
+        <button
+          onclick="toggleGlossary()"
+          class="absolute top-4 right-4 text-aecsa-grayMuted hover:text-aecsa-navy text-2xl font-bold transition-colors"
+        >
+          &times;
+        </button>
+        <div class="mb-4">
+          <span class="aecsa-eyebrow">MARCO TEÓRICO</span>
+          <h3 class="text-2xl font-bold text-aecsa-navy mt-1">
+            Diccionario de Términos Técnicos y Financieros
+          </h3>
+        </div>
+        <div
+          class="overflow-y-auto max-h-[55vh] space-y-4 pr-2 text-sm leading-relaxed text-aecsa-grayMuted"
+        >
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >Climatización (HVAC):</strong
+            >
+            Calefacción, Ventilación y Aire Acondicionado (por sus siglas en
+            inglés, *Heating, Ventilation, and Air Conditioning*). Sistemas
+            encargados de regular la temperatura, renovación de aire y humedad
+            en edificios.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >Inversión Inicial (CAPEX):</strong
+            >
+            Gasto en Bienes de Capital (*Capital Expenditure*). El dinero que la
+            empresa invierte para adquirir e instalar los activos físicos
+            (sensores, controladores, software).
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >Costos Operativos (OPEX):</strong
+            >
+            Gasto Operacional (*Operational Expenditure*). Los costos continuos
+            asociados al funcionamiento, licencias de software en la nube y
+            mantenimiento de la infraestructura.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >PMV (Voto Medio Previsto):</strong
+            >
+            Indicador de Sensación Térmica (*Predicted Mean Vote*). Escala de
+            confort de la norma ISO 7730 que va de -3 (muy frío) a +3 (muy
+            caliente), donde 0 representa el equilibrio térmico óptimo.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >PPD (Porcentaje de Personas Insatisfechas):</strong
+            >
+            Índice de Disconfort Térmico (*Predicted Percentage of
+            Dissatisfied*). Predice el porcentaje de ocupantes de un espacio que
+            experimentarán incomodidad térmica.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >CO₂ (Dióxido de Carbono):</strong
+            >
+            Gas exhalado por seres humanos. En oficinas cerradas de alta
+            densidad, niveles superiores a 1.000 partes por millón (ppm) causan
+            fatiga cognitiva, reduciendo la concentración y el rendimiento.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold"
+              >Ley 1715 de 2014:</strong
+            >
+            Marco normativo de Colombia que otorga incentivos tributarios
+            (exclusión de IVA del 19%, deducción impositiva del impuesto de
+            renta) a proyectos que implementen eficiencia energética.
+          </p>
+          <p>
+            <strong class="text-aecsa-navy font-semibold">UPME y ANLA:</strong>
+            Entidades estatales de Colombia responsables de validar y avalar
+            técnicamente los proyectos de eficiencia para acceder a los
+            descuentos tributarios.
+          </p>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button
+            onclick="toggleGlossary()"
+            class="bg-aecsa-navy text-white px-6 py-2.5 rounded-xl font-bold hover:bg-aecsa-navy/90 border border-aecsa-navy hover:border-aecsa-green transition-all text-xs tracking-wider uppercase"
+          >
+            Cerrar Diccionario
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENCABEZADO DE MARCA (BRAND HEADER) -->
+    <header
+      class="bg-aecsa-navy text-white border-b-4 border-aecsa-green sticky top-0 z-40 shadow-md"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="flex items-center gap-4">
+          <!-- Logotipo Oficial Estilo AECSA (Navy block + Green leaf accents) -->
+          <div
+            class="text-aecsa-navy px-4 py-2 rounded-xl font-extrabold text-xl tracking-tight flex items-center gap-1.5 shadow-sm min-w-[208px]"
+          >
+            <svg
+              viewBox="0 0 208 40"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-10"
+            >
+              <path
+                d="M140.964 12.8343C141.098 12.945 141.242 13.0419 141.395 13.1234C141.246 13.0345 141.103 12.938 140.964 12.8343ZM140.33 9.77386C140.404 9.64176 140.486 9.51457 140.577 9.39307C140.484 9.51287 140.401 9.64025 140.33 9.77386Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M158.551 26.4584C158.551 29.6317 157.95 32.2174 156.746 34.2154C155.598 36.1439 153.87 37.6614 151.81 38.5522C149.563 39.5134 147.139 39.9938 144.695 39.9625C142.661 39.9741 140.631 39.778 138.637 39.3772C136.877 39.0305 135.201 38.3456 133.701 37.3604C132.244 36.3626 131.088 34.9846 130.359 33.3762C129.487 31.3524 129.073 29.1613 129.146 26.9591V26.6559C129.145 26.5134 129.162 26.3714 129.195 26.2328H138.503C138.454 26.4884 138.431 26.7482 138.433 27.0085C138.436 27.7299 138.623 28.4387 138.974 29.0688C139.325 29.6989 139.831 30.2298 140.443 30.6119C141.691 31.3196 143.143 31.5831 144.561 31.3594C145.731 31.2113 147.099 30.8799 147.819 29.8574C148.097 29.4159 148.25 28.907 148.261 28.3853C148.272 27.8636 148.141 27.3487 147.882 26.8956C147.325 25.9084 146.211 25.4218 145.231 24.9846C143.682 24.3234 142.089 23.7697 140.464 23.3275C138.087 22.6223 135.718 21.9171 133.68 20.4362C132.785 19.7985 131.995 19.0253 131.339 18.1444C130.154 16.4453 129.562 14.4032 129.653 12.3338C129.597 10.3656 129.988 8.41028 130.796 6.61481C131.511 5.11145 132.586 3.80818 133.927 2.82097C135.291 1.84087 136.827 1.12346 138.454 0.705449C140.193 0.241972 141.985 0.00495486 143.785 0.000274071C145.584 -0.00922116 147.375 0.228049 149.109 0.705449C150.702 1.144 152.199 1.87579 153.524 2.86328C154.81 3.83816 155.847 5.1046 156.549 6.5584C157.321 8.22597 157.711 10.0449 157.691 11.8825V12.5524H148.221C148.379 11.6089 148.213 10.6396 147.749 9.80267C147.286 8.96572 146.553 8.31051 145.669 7.94395C144.785 7.5774 143.804 7.52113 142.884 7.78433C141.964 8.04754 141.161 8.61467 140.605 9.3932C140.512 9.513 140.429 9.64038 140.358 9.774C140.177 10.1276 140.083 10.5192 140.083 10.9164C140.082 11.2812 140.162 11.6418 140.317 11.9721C140.472 12.3025 140.698 12.5946 140.978 12.8274C141.108 12.9396 141.25 13.0366 141.402 13.1165C141.867 13.391 142.361 13.6133 142.875 13.7794C143.757 14.0826 144.751 14.3576 145.844 14.6256L147.001 14.9006C147.741 15.084 148.503 15.2814 149.278 15.493C150.457 15.8091 151.604 16.2316 152.705 16.7552C153.801 17.2727 154.806 17.9632 155.681 18.8002C156.594 19.6795 157.314 20.7384 157.797 21.9101C158.355 23.3571 158.619 24.9011 158.573 26.4514"
+                fill="#c0dd17"
+              />
+              <path
+                d="M120.359 31.028L121.77 31.7331C120.584 33.3783 119.158 34.8356 117.538 36.0558C113.166 39.2486 107.708 40.5821 102.356 39.7651C98.7916 39.1705 95.4525 37.6288 92.6881 35.3013L92.4272 35.0757L92.1522 34.8288C91.9477 34.6455 91.7432 34.4551 91.5457 34.2577C89.3919 32.1723 87.7464 29.6196 86.7364 26.7969L86.6307 26.4937C86.5813 26.3526 86.539 26.2116 86.4896 26.0635C86.4896 26.0635 86.4896 26.0635 86.4896 26.0212C86.4479 25.9033 86.4126 25.7833 86.3838 25.6616C86.3642 25.6062 86.3477 25.5496 86.3345 25.4923C86.3067 25.4119 86.2855 25.3294 86.271 25.2455L86.1864 24.9211C86.1821 24.9098 86.1821 24.8972 86.1864 24.8859C86.1441 24.7096 86.1018 24.5333 86.0665 24.357C85.7989 23.1212 85.6501 21.8626 85.6223 20.5984C85.6223 20.4715 85.6223 20.3516 85.6223 20.2317V20.0625C85.6223 19.7334 85.6223 19.402 85.6223 19.0682C85.6223 18.8143 85.6223 18.5605 85.6787 18.3066C85.7351 18.0527 85.6787 17.954 85.728 17.7777C85.7774 17.6014 85.728 17.4745 85.7844 17.3194C85.8409 17.1642 85.7844 17.0937 85.8338 16.9879C85.8832 16.8821 85.8338 16.7552 85.8902 16.6424C86.4988 12.7417 88.2681 9.11477 90.9675 6.23401C92.1024 5.03887 93.3815 3.98951 94.7754 3.11008L95.0575 2.93379L95.3255 2.7716L95.671 2.5671L96.1505 2.30618L96.4678 2.13694L96.7993 1.97475L97.2365 1.77025L97.6807 1.5728L98.1603 1.41061L98.6116 1.23432C102.741 -0.276891 107.253 -0.387969 111.452 0.918208C115.651 2.22439 119.304 4.8753 121.847 8.46236L117.249 10.9939L112.073 13.6595C111.091 12.618 109.886 11.8127 108.547 11.3042C107.618 10.996 106.643 10.8458 105.663 10.86C104.41 10.8605 103.168 11.0998 102.003 11.5651C100.881 11.9996 99.8576 12.6541 98.9924 13.4903C98.1331 14.3342 97.4395 15.3316 96.9474 16.4308C96.4323 17.5691 96.1723 18.8062 96.1858 20.0554C96.1702 21.3276 96.43 22.5882 96.9474 23.7505C97.4379 24.8486 98.1318 25.844 98.9924 26.6841C99.866 27.5238 100.887 28.1955 102.003 28.6656C103.165 29.1397 104.409 29.3794 105.663 29.3708C106.542 29.3791 107.417 29.2555 108.258 29.0041C108.59 28.8913 108.9 28.7573 109.21 28.6163C110.27 28.1194 111.227 27.4281 112.031 26.5783L120.359 31.028Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M60.1795 9.55548V15.5495L72.1534 15.5354V24.5686L60.1795 24.5757V30.5767H76.5678V39.5889H49.4256L49.4538 0.515137H76.5678V9.55548H60.1795Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M44.6658 39.5888H32.7342L22.3329 21.1767L11.9316 39.5888H0L22.3329 0.381104L44.6658 39.5888Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M207.378 39.5888H195.453L185.045 21.1767L174.644 39.5888H162.712L185.045 0.381104L207.378 39.5888Z"
+                fill="#c0dd17"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight text-aecsa-snow">
+              Investigación de Confort e Innovación IoT
+            </h1>
+            <p class="text-[11px] text-aecsa-green font-medium tracking-wide">
+              TECNOLOGÍA EN CLIMATIZACIÓN PARA LA PRODUCTIVIDAD Y SOSTENIBILIDAD
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            onclick="toggleGlossary()"
+            class="bg-aecsa-navy hover:bg-slate-800 text-aecsa-green text-xs font-semibold px-4 py-2.5 rounded-xl transition border-2 border-aecsa-green flex items-center gap-2"
+          >
+            <span>📖</span> Diccionario Técnico
+          </button>
+          <div
+            class="hidden lg:flex items-center gap-2 text-xs bg-slate-800/80 px-4 py-2.5 rounded-xl border border-slate-700"
+          >
+            <span
+              class="w-2.5 h-2.5 rounded-full bg-aecsa-green animate-pulse"
+            ></span>
+            <span class="text-slate-300"
+              >TRM de Referencia: <strong>$ 4.100 COP</strong></span
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- BANNER EJECUTIVO CON ALINEACIÓN AL INFORME DE SOSTENIBILIDAD 2025 -->
+    <section
+      class="bg-gradient-to-br from-aecsa-navy via-[#022a3f] to-aecsa-navy text-white py-14 px-6 relative overflow-hidden"
+    >
+      <!-- Círculos de diseño de fondo -->
+      <div
+        class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-aecsa-green/5 blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="absolute -left-40 -bottom-40 w-96 h-96 rounded-full bg-aecsa-orange/5 blur-3xl pointer-events-none"
+      ></div>
+
+      <div
+        class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-center"
+      >
+        <div class="lg:col-span-2 space-y-5">
+          <span class="aecsa-eyebrow text-aecsa-green"
+            >Sostenibilidad Corporativa</span
+          >
+          <h2
+            class="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-none"
+          >
+            Eficiencia Climatizadora IoT para Centros de Alta Densidad (BPO)
+          </h2>
+          <p
+            class="text-slate-300 text-sm md:text-base leading-relaxed max-w-3xl"
+          >
+            Con base en el
+            <strong>Informe de Sostenibilidad 2025 de AECSA S.A.S.</strong>,
+            nuestra organización posee una intensidad de consumo auditada de
+            <strong class="text-white">39,4 kWh/m²/mes</strong>. La
+            climatización inteligente en la Sede Américas (Bogotá) reducirá este
+            consumo a
+            <strong class="text-aecsa-green">30,7 kWh/m²/mes</strong> de forma
+            directa en la red eléctrica (Alcance 2), fortaleciendo el Sistema de
+            Gestión Ambiental (ISO 14001:2015) auditado por Bureau Veritas.
+          </p>
+          <div class="flex flex-wrap gap-4 pt-2">
+            <div
+              class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center min-w-[140px] shadow-sm"
+            >
+              <div class="text-aecsa-green text-2xl font-bold">22%</div>
+              <div
+                class="text-[10px] text-slate-300 uppercase tracking-wider font-semibold mt-1"
+              >
+                Ahorro Energía
+              </div>
+            </div>
+            <div
+              class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center min-w-[140px] shadow-sm"
+            >
+              <div class="text-aecsa-green text-2xl font-bold">9.6 Meses</div>
+              <div
+                class="text-[10px] text-slate-300 uppercase tracking-wider font-semibold mt-1"
+              >
+                Amortización
+              </div>
+            </div>
+            <div
+              class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center min-w-[140px] shadow-sm"
+            >
+              <div class="text-aecsa-orange text-2xl font-bold">71.3 Ton</div>
+              <div
+                class="text-[10px] text-slate-300 uppercase tracking-wider font-semibold mt-1"
+              >
+                CO₂ Evitado Anual
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque de Certificación y Metas AECSA -->
+        <div
+          class="bg-white p-6 rounded-2xl border-l-8 border-aecsa-green text-aecsa-navy shadow-xl space-y-4"
+        >
+          <h3
+            class="font-extrabold text-lg text-aecsa-navy flex items-center gap-2"
+          >
+            <span>🌿</span> Auditoría ISO 14001
+          </h3>
+          <p class="text-xs text-aecsa-grayMuted leading-relaxed">
+            Nuestras auditorías con <strong>Bureau Veritas</strong> exigen
+            medición automatizada. El despliegue de sensores IoT inalámbricos
+            reemplaza los reportes manuales ineficientes por telemetría
+            instantánea y almacenamiento ambiental continuo de CO₂, temperatura
+            y humedad relativa.
+          </p>
+          <div
+            class="pt-2 border-t border-aecsa-border flex items-center justify-between text-xs font-bold text-aecsa-navy"
+          >
+            <span>Carbono Neutro 2026</span>
+            <span class="text-aecsa-greenDark">Compromiso AECSA</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN PRINCIPAL (TABS) -->
+    <nav
+      class="bg-aecsa-grayAlt border-b border-aecsa-border sticky top-[77px] z-30 shadow-sm overflow-x-auto scrollbar-none"
+    >
+      <div class="max-w-7xl mx-auto px-6 flex space-x-2 py-3 min-w-[950px]">
+        <button
+          onclick="switchTab('dashboard')"
+          id="btn-dashboard"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-2 bg-aecsa-navy text-white shadow"
+        >
+          <span>📊</span> DASHBOARD OPERATIVO
+        </button>
+        <button
+          onclick="switchTab('calculator')"
+          id="btn-calculator"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2"
+        >
+          <span>🧮</span> CALCULADORA ROI & LEY 1715
+        </button>
+        <button
+          onclick="switchTab('providers')"
+          id="btn-providers"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2"
+        >
+          <span>🔌</span> CATÁLOGO DE PROVEEDORES
+        </button>
+        <button
+          onclick="switchTab('sustainability')"
+          id="btn-sustainability"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2"
+        >
+          <span>🌱</span> SOSTENIBILIDAD FORESTAL
+        </button>
+        <button
+          onclick="switchTab('science')"
+          id="btn-science"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2"
+        >
+          <span>🧪</span> CIENCIA DEL CONFORT
+        </button>
+        <button
+          onclick="switchTab('roadmap')"
+          id="btn-roadmap"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2"
+        >
+          <span>🗺</span> RUTA TRIBUTARIA 24 MESES
+        </button>
+        <button
+          onclick="switchTab('ai')"
+          id="btn-ai"
+          class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-aecsa-navy hover:bg-white hover:shadow-sm transition-all duration-150 flex items-center gap-2 text-indigo-700 font-extrabold"
+        >
+          <span>⚡</span> ASISTENTE INTELIGENTE IA
+        </button>
+      </div>
+    </nav>
+
+    <!-- CONTENIDO CENTRAL DE LA PLATAFORMA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-6 space-y-8">
+      <!-- TAB 1: DASHBOARD EJECUTIVO AECSA S.A.S. -->
+      <div id="tab-dashboard" class="tab-content space-y-6">
+        <!-- Tarjetas de Indicadores Principales distribuidas en una sola fila horizontal -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Tarjeta Inversión Sede Bogotá -->
+          <div
+            class="bg-white p-6 rounded-2xl border border-aecsa-border hover:border-aecsa-green transition duration-200 flex flex-col justify-between shadow-sm"
+          >
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                  >Inversión Sede Bogotá</span
+                >
+                <span
+                  class="bg-aecsa-navy text-aecsa-green text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                  >5.574,18 m²</span
+                >
+              </div>
+              <div class="text-2xl font-extrabold text-aecsa-navy">
+                $ 615.018.000 COP
+              </div>
+              <p class="text-[11px] text-aecsa-grayMuted mt-2 leading-relaxed">
+                Inversión total de sensores y automatizadores inalámbricos.
+                Ahorro de <strong>$ 492.000.000 COP</strong> en obra civil
+                frente a instalación tradicional cableada.
+              </p>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-aecsa-grayAlt flex items-center justify-between text-xs font-bold text-aecsa-greenDark"
+            >
+              <span>Reducción inicial de obra</span>
+              <span>-44.4% instalación</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta Ahorro Energía Anual -->
+          <div
+            class="bg-white p-6 rounded-2xl border border-aecsa-border hover:border-aecsa-green transition duration-200 flex flex-col justify-between shadow-sm"
+          >
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                  >Ahorro Energía Anual</span
+                >
+                <span
+                  class="bg-aecsa-green/20 text-aecsa-navy text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                  >Eficiencia</span
+                >
+              </div>
+              <div class="text-2xl font-extrabold text-aecsa-greenDark">
+                $ 484.704.000 COP
+              </div>
+              <p class="text-[11px] text-aecsa-grayMuted mt-2 leading-relaxed">
+                Consumo base anual de climatización se reduce de $ 2.203.000.000
+                COP a $ 1.718.296.000 COP gracias a la desconexión automática
+                por ausencia.
+              </p>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-aecsa-grayAlt flex items-center justify-between text-xs text-aecsa-grayMuted"
+            >
+              <span>Tasa de Ahorro Eléctrico</span>
+              <span class="text-aecsa-greenDark font-bold"
+                >-22.0% kWh Anual</span
+              >
+            </div>
+          </div>
+
+          <!-- Tarjeta Retorno de Productividad -->
+          <div
+            class="bg-white p-6 rounded-2xl border border-aecsa-border hover:border-aecsa-green transition duration-200 flex flex-col justify-between shadow-sm"
+          >
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                  >Retorno de Productividad</span
+                >
+                <span
+                  class="bg-aecsa-navy text-aecsa-orange text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                  >Call Center</span
+                >
+              </div>
+              <div class="text-2xl font-extrabold text-aecsa-navy">
+                $ 864.000.000 COP
+              </div>
+              <p class="text-[11px] text-aecsa-grayMuted mt-2 leading-relaxed">
+                Disminución del ausentismo por dolores de cabeza y fatiga
+                cognitiva. Mantener el CO₂ bajo las 800 ppm incrementa
+                notablemente la agilidad del servicio.
+              </p>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-aecsa-grayAlt flex items-center justify-between text-xs text-aecsa-grayMuted"
+            >
+              <span>Cálculo sobre 1.500 Puestos</span>
+              <span class="text-aecsa-orange font-bold"
+                >Mitigación Estratégica</span
+              >
+            </div>
+          </div>
+
+          <!-- Tarjeta Mitigación de Huella -->
+          <div
+            class="bg-white p-6 rounded-2xl border border-aecsa-border hover:border-aecsa-green transition duration-200 flex flex-col justify-between shadow-sm"
+          >
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                  >Mitigación de Huella</span
+                >
+                <span
+                  class="bg-teal-100 text-teal-800 text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                  >Alcance 2</span
+                >
+              </div>
+              <div class="text-2xl font-extrabold text-teal-700">
+                71.3 Toneladas CO₂e
+              </div>
+              <p class="text-[11px] text-aecsa-grayMuted mt-2 leading-relaxed">
+                Reducción directa de emisiones de gases de efecto invernadero en
+                la red eléctrica comercial de Bogotá, certificado en origen
+                mediante telemetría IoT.
+              </p>
+            </div>
+            <div
+              class="mt-4 pt-3 border-t border-aecsa-grayAlt flex items-center justify-between text-xs text-teal-700 font-bold"
+            >
+              <span>Sinergia de Carbono</span>
+              <span>+25.4% de Impacto</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de Análisis Gráfico Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Grafica de Flujo de Caja Acumulado -->
+          <div
+            class="bg-white p-6 rounded-2xl border border-aecsa-border shadow-sm lg:col-span-2 space-y-4"
+          >
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+            >
+              <div>
+                <span class="aecsa-eyebrow">Perspectiva Financiera</span>
+                <h3 class="text-lg font-bold text-aecsa-navy mt-1">
+                  Retorno de Inversión (ROI) Acumulado a 36 Meses
+                </h3>
+              </div>
+              <span
+                class="bg-aecsa-navy text-white text-[10px] font-bold px-3 py-1 rounded-xl uppercase tracking-wider border border-aecsa-green"
+                >Cifras en Millones de $ COP</span
+              >
+            </div>
+            <div class="relative h-[300px]">
+              <canvas id="chartRetornoAECSA"></canvas>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Sostenibilidad Forestal -->
+          <div
+            class="bg-[#012030] text-white p-6 rounded-2xl border border-aecsa-border flex flex-col justify-between space-y-6 relative overflow-hidden"
+          >
+            <div
+              class="absolute -right-16 -bottom-16 w-48 h-48 rounded-full bg-aecsa-green/10 blur-2xl"
+            ></div>
+
+            <div class="space-y-4">
+              <span class="aecsa-eyebrow text-aecsa-green">Bosque AECSA</span>
+              <h3 class="text-lg font-bold text-white">
+                Compensación vs. Prevención Activa
+              </h3>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Actualmente, AECSA compensa
+                <strong>280 Toneladas de CO₂</strong> anualmente en la Amazonía
+                (Vaupés) con <em>Saving the Amazon</em> y en Villa de Leyva. El
+                despliegue de climatización inteligente previene la emisión de
+                71.3 Toneladas de CO₂ adicionales, logrando mitigar la huella de
+                carbono directamente en su fuente de origen antes de requerir
+                compensación.
+              </p>
+
+              <div class="space-y-3 pt-2">
+                <div>
+                  <div class="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>Esfuerzo Forestal Actual:</span>
+                    <span class="text-white font-bold">280 Ton CO₂ / año</span>
+                  </div>
+                  <div
+                    class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"
+                  >
+                    <div class="bg-aecsa-green h-full w-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>Eficiencia Energética IoT:</span>
+                    <span class="text-aecsa-green font-bold"
+                      >+71.3 Ton CO₂ / año</span
+                    >
+                  </div>
+                  <div
+                    class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"
+                  >
+                    <div
+                      class="bg-aecsa-green h-full"
+                      style="width: 25.4%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="bg-white/10 p-4 rounded-xl border border-white/10 text-xs text-slate-200"
+            >
+              <strong>Impacto Combinado:</strong> El proyecto de eficiencia
+              representa una mejora directa del 25.4% sobre la capacidad de
+              descarbonización actual de la organización, autofinanciándose en
+              su totalidad con los ahorros eléctricos.
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalle sobre el Período de Recuperación -->
+        <div class="bg-white p-6 rounded-2xl border border-aecsa-border">
+          <span class="aecsa-eyebrow">PERIODO DE RETORNO</span>
+          <h3 class="text-lg font-bold text-aecsa-navy mt-1 mb-4">
+            ¿Cuándo se recupera la inversión de climatización?
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div class="space-y-4 text-sm text-aecsa-grayMuted leading-relaxed">
+              <p>
+                El retorno de la inversión de esta tecnología ha sido proyectado
+                bajo dos escenarios sumamente estrictos, incluyendo las
+                exenciones tributarias completas de la
+                <strong>Ley 1715 de 2014</strong> vigentes en Colombia:
+              </p>
+              <ul class="space-y-3">
+                <li class="flex gap-3 items-start">
+                  <span
+                    class="bg-aecsa-green text-aecsa-navy font-black rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs mt-0.5"
+                    >1</span
+                  >
+                  <div>
+                    <strong class="text-aecsa-navy font-semibold"
+                      >Escenario Eléctrico (Solo Factura de Energía):</strong
+                    >
+                    Recuperación de la inversión de climatización inteligente en
+                    <strong class="text-aecsa-navy font-bold">9.6 meses</strong>
+                    de operación, basándose exclusivamente en el ahorro directo
+                    de la tarifa eléctrica comercial de Bogotá.
+                  </div>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <span
+                    class="bg-aecsa-green text-aecsa-navy font-black rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs mt-0.5"
+                    >2</span
+                  >
+                  <div>
+                    <strong class="text-aecsa-navy font-semibold"
+                      >Escenario Operativo (Energía + Productividad):</strong
+                    >
+                    Recuperación de la inversión en
+                    <strong class="text-aecsa-navy font-bold">3.5 meses</strong
+                    >. Este escenario incorpora las ganancias operativas del
+                    Call Center al mitigar el ausentismo y agilizar los tiempos
+                    de atención telefónica gracias al control activo de CO₂.
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div
+              class="bg-aecsa-grayAlt p-6 rounded-2xl border border-aecsa-border grid grid-cols-2 gap-4"
+            >
+              <div
+                class="bg-white p-4 rounded-xl border border-aecsa-border text-center shadow-sm"
+              >
+                <div
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                >
+                  Amortización Eléctrica
+                </div>
+                <div class="text-4xl font-extrabold text-aecsa-navy mt-1">
+                  9.6
+                </div>
+                <div class="text-xs text-aecsa-grayMuted font-medium mt-1">
+                  Meses de Operación
+                </div>
+              </div>
+              <div
+                class="bg-white p-4 rounded-xl border border-aecsa-border text-center shadow-sm"
+              >
+                <div
+                  class="text-[10px] font-bold text-aecsa-grayMuted uppercase tracking-wider"
+                >
+                  Amortización Operativa
+                </div>
+                <div class="text-4xl font-extrabold text-aecsa-greenDark mt-1">
+                  3.5
+                </div>
+                <div class="text-xs text-aecsa-grayMuted font-medium mt-1">
+                  Meses de Operación
+                </div>
+              </div>
+              <p
+                class="col-span-2 text-[10px] text-center text-aecsa-grayMuted italic"
+              >
+                *Los cálculos contemplan el descuento directo del 19% de IVA y
+                deducciones de renta autorizadas por la UPME.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CALCULADORA DE ROI E INCENTIVOS TRIBUTARIOS (LEY 1715) -->
+      <div id="tab-calculator" class="tab-content hidden space-y-6">
+        <div
+          class="bg-white p-6 rounded-2xl border border-aecsa-border shadow-sm"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-aecsa-border pb-5 mb-6"
+          >
+            <div>
+              <span class="aecsa-eyebrow">Simulador de Proyectos</span>
+              <h2 class="text-xl font-bold text-aecsa-navy mt-1">
+                Modelado financiero y descuento de impuestos en Colombia
+              </h2>
+              <p class="text-xs text-aecsa-grayMuted">
+                Ajusta los deslizadores para proyectar el ahorro y la reducción
+                tributaria de la organización.
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button
+                onclick="resetToAecsaPreset()"
+                class="bg-aecsa-navy text-white text-xs font-bold px-4 py-2.5 rounded-xl border-2 border-aecsa-navy hover:bg-white hover:text-aecsa-navy hover:border-aecsa-navy transition-all flex items-center gap-2"
+              >
+                🔄 Restablecer Parámetros AECSA
+              </button>
+              <button
+                onclick="generateAEMemory()"
+                class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-200"
+              >
+                ⚡ Generar Justificación UPME con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Inputs / Sliders -->
+            <div
+              class="lg:col-span-1 space-y-6 bg-aecsa-grayAlt p-6 rounded-2xl border border-aecsa-border"
+            >
+              <h3
+                class="font-extrabold text-aecsa-navy text-sm border-b border-aecsa-border pb-2 mb-4 uppercase tracking-wider"
+              >
+                🎛 Parámetros Operacionales
+              </h3>
+
+              <!-- Área a Climatizar -->
+              <div>
+                <div
+                  class="flex justify-between text-xs font-bold text-aecsa-navy mb-1"
+                >
+                  <span>Área de Oficinas (m²):</span>
+                  <span id="lblArea" class="text-aecsa-greenDark font-bold"
+                    >5.574 m²</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="sliderArea"
+                  min="1000"
+                  max="15000"
+                  step="500"
+                  value="5574"
+                  class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  oninput="calculateROI()"
+                />
+                <div
+                  class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                >
+                  <span>1.000 m²</span>
+                  <span>15.000 m²</span>
+                </div>
+              </div>
+
+              <!-- Costo Mensual Energía HVAC -->
+              <div>
+                <div
+                  class="flex justify-between text-xs font-bold text-aecsa-navy mb-1"
+                >
+                  <span>Costo de Energía Mensual ($ COP):</span>
+                  <span
+                    id="lblCostoEnergia"
+                    class="text-aecsa-greenDark font-bold"
+                    >$ 183.600.000 COP</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="sliderCostoEnergia"
+                  min="20000000"
+                  max="400000000"
+                  step="10000000"
+                  value="183600000"
+                  class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  oninput="calculateROI()"
+                />
+                <div
+                  class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                >
+                  <span>$ 20 Millones</span>
+                  <span>$ 400 Millones</span>
+                </div>
+              </div>
+
+              <!-- Tarifa Eléctrica por kWh -->
+              <div>
+                <div
+                  class="flex justify-between text-xs font-bold text-aecsa-navy mb-1"
+                >
+                  <span>Tarifa Eléctrica ($/kWh):</span>
+                  <span id="lblTarifaKwh" class="text-aecsa-greenDark font-bold"
+                    >$ 1.050 COP</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="sliderTarifaKwh"
+                  min="800"
+                  max="1400"
+                  step="50"
+                  value="1050"
+                  class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  oninput="calculateROI()"
+                />
+                <div
+                  class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                >
+                  <span>$ 800 COP</span>
+                  <span>$ 1.400 COP</span>
+                </div>
+              </div>
+
+              <!-- Cantidad de Puestos de Agentes -->
+              <div>
+                <div
+                  class="flex justify-between text-xs font-bold text-aecsa-navy mb-1"
+                >
+                  <span>Puestos de Agentes (Ocupación):</span>
+                  <span id="lblPuestos" class="text-aecsa-orange font-bold"
+                    >1.500 Puestos</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="sliderPuestos"
+                  min="200"
+                  max="5000"
+                  step="100"
+                  value="1500"
+                  class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  oninput="calculateROI()"
+                />
+                <div
+                  class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                >
+                  <span>200 Puestos</span>
+                  <span>5.000 Puestos</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Outputs Detallados con Ley 1715 -->
+            <div class="lg:col-span-2 space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Tarjeta Desglose Inversión -->
+                <div
+                  class="border border-aecsa-border p-6 rounded-2xl bg-white shadow-sm space-y-4"
+                >
+                  <h4
+                    class="text-xs font-bold text-aecsa-grayMuted uppercase tracking-wider border-b border-aecsa-grayAlt pb-2"
+                  >
+                    💵 Presupuesto y Deducciones Ley 1715
+                  </h4>
+                  <div class="space-y-2.5 text-sm">
+                    <div class="flex justify-between text-aecsa-navy">
+                      <span>Inversión Inicial Estimada:</span>
+                      <span id="outCapexBruto" class="font-extrabold">$ 0</span>
+                    </div>
+                    <div class="flex justify-between text-aecsa-orange">
+                      <span>Exclusión de IVA (19%):</span>
+                      <span id="outExclusionIva" class="font-bold">-$ 0</span>
+                    </div>
+                    <div class="flex justify-between text-teal-700">
+                      <span>Deducción Renta (Renta 35%):</span>
+                      <span id="outDeduccionRenta" class="font-bold">-$ 0</span>
+                    </div>
+                    <div
+                      class="border-t border-aecsa-border pt-3 flex justify-between font-extrabold text-aecsa-navy text-lg"
+                    >
+                      <span>Inversión Neta Real:</span>
+                      <span id="outCapexNeto" class="text-aecsa-greenDark"
+                        >$ 0</span
+                      >
+                    </div>
+                  </div>
+                  <p
+                    class="text-[10px] text-aecsa-grayMuted leading-relaxed italic"
+                  >
+                    *La Ley 1715 de 2014 permite deducir el 50% de la inversión
+                    en el impuesto de renta durante 5 años, lo que equivale a un
+                    beneficio tributario de caja inmediato del 17.5% neto de la
+                    inversión.
+                  </p>
+                </div>
+
+                <!-- Tarjeta Retornos de Operación -->
+                <div
+                  class="border border-aecsa-border p-6 rounded-2xl bg-[#012030] text-white shadow-sm space-y-4"
+                >
+                  <h4
+                    class="text-xs font-bold text-aecsa-green uppercase tracking-wider border-b border-white/10 pb-2"
+                  >
+                    🌿 Ahorros e Impacto Anual
+                  </h4>
+                  <div class="space-y-2.5 text-sm text-slate-200">
+                    <div class="flex justify-between">
+                      <span>Ahorro Eléctrico Anual:</span>
+                      <span
+                        id="outAhorroEnergia"
+                        class="font-bold text-aecsa-green"
+                        >$ 0</span
+                      >
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Retorno de Productividad:</span>
+                      <span
+                        id="outAhorroProductividad"
+                        class="font-bold text-aecsa-green"
+                        >$ 0</span
+                      >
+                    </div>
+                    <div
+                      class="border-t border-white/10 pt-3 flex justify-between font-extrabold text-white text-lg"
+                    >
+                      <span>Ahorro Consolidado Anual:</span>
+                      <span id="outAhorroTotal" class="text-aecsa-green"
+                        >$ 0</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white/10 p-3 rounded-xl border border-white/10 text-xs text-center font-semibold text-aecsa-green"
+                  >
+                    CO₂ Evitado:
+                    <span id="outCo2Evitado" class="font-bold text-white ml-1"
+                      >0 Toneladas</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel de Payback Period -->
+              <div
+                class="bg-aecsa-grayAlt p-6 rounded-2xl border border-aecsa-border space-y-4"
+              >
+                <h4
+                  class="text-xs font-bold text-aecsa-navy uppercase tracking-wider"
+                >
+                  Períodos de retorno estimados
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div
+                    class="bg-white p-4 rounded-xl border border-aecsa-border flex items-center justify-between shadow-sm"
+                  >
+                    <div>
+                      <span
+                        class="text-[10px] font-bold text-aecsa-grayMuted block uppercase"
+                        >Amortización Eléctrica</span
+                      >
+                      <span
+                        id="outPaybackEnergia"
+                        class="text-2xl font-black text-aecsa-navy"
+                        >0.0 Meses</span
+                      >
+                    </div>
+                    <span
+                      class="bg-aecsa-navy/5 text-aecsa-navy text-[10px] font-bold px-2 py-1 rounded"
+                      >SOLO ENERGÍA</span
+                    >
+                  </div>
+                  <div
+                    class="bg-white p-4 rounded-xl border border-aecsa-border flex items-center justify-between shadow-sm"
+                  >
+                    <div>
+                      <span
+                        class="text-[10px] font-bold text-aecsa-grayMuted block uppercase"
+                        >Amortización Operativa</span
+                      >
+                      <span
+                        id="outPaybackCombinado"
+                        class="text-2xl font-black text-aecsa-greenDark"
+                        >0.0 Meses</span
+                      >
+                    </div>
+                    <span
+                      class="bg-aecsa-green/20 text-aecsa-navy text-[10px] font-bold px-2 py-1 rounded"
+                      >CON PRODUCTIVIDAD</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CATÁLOGO DE 20 PROVEEDORES REALES CON PRECIOS Y ESPECIFICACIONES -->
+      <div id="tab-providers" class="tab-content hidden space-y-6">
+        <div
+          class="bg-white p-6 rounded-2xl border border-aecsa-border shadow-sm"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-aecsa-border pb-5 mb-6"
+          >
+            <div>
+              <span class="aecsa-eyebrow">Aliados Comerciales</span>
+              <h2 class="text-xl font-bold text-aecsa-navy mt-1">
+                Ecosistema de Proveedores e Integradores en Colombia
+              </h2>
+              <p class="text-xs text-aecsa-grayMuted">
+                Análisis de 10 integradores nacionales y 10 marcas
+                internacionales con cotizaciones estimadas en pesos colombianos
+                para la Sede Américas.
+              </p>
+            </div>
+            <!-- Filtro de Categoría -->
+            <div class="flex gap-2">
+              <button
+                onclick="filterProviders('todos')"
+                id="btn-filtro-todos"
+                class="filter-btn bg-aecsa-navy text-white text-xs font-bold px-4 py-2 rounded-lg border border-aecsa-navy transition-all"
+              >
+                Todos (20)
+              </button>
+              <button
+                onclick="filterProviders('nacionales')"
+                id="btn-filtro-nacionales"
+                class="filter-btn bg-aecsa-grayAlt text-aecsa-navy hover:bg-white text-xs font-bold px-4 py-2 rounded-lg border border-aecsa-border transition-all"
+              >
+                Nacionales (10)
+              </button>
+              <button
+                onclick="filterProviders('internacionales')"
+                id="btn-filtro-internacionales"
+                class="filter-btn bg-aecsa-grayAlt text-aecsa-navy hover:bg-white text-xs font-bold px-4 py-2 rounded-lg border border-aecsa-border transition-all"
+              >
+                Internacionales (10)
+              </button>
+            </div>
+          </div>
+
+          <!-- Barra de Comparación con IA -->
+          <div
+            class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🤖</span>
+              <div>
+                <h4 class="text-sm font-bold text-indigo-900">
+                  Comparativa Técnica Inteligente
+                </h4>
+                <p class="text-xs text-indigo-700">
+                  Selecciona dos proveedores para que Gemini realice un análisis
+                  de ventajas, interoperabilidad y riesgos corporativos.
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <select
+                id="compare-p1"
+                class="text-xs p-2 rounded-lg border border-indigo-200 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <!-- Se puebla dinámicamente -->
+              </select>
+              <span class="text-xs text-indigo-500 font-bold">vs</span>
+              <select
+                id="compare-p2"
+                class="text-xs p-2 rounded-lg border border-indigo-200 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <!-- Se puebla dinámicamente -->
+              </select>
+              <button
+                onclick="compareSuppliersWithAI()"
+                class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-md"
+              >
+                Comparar con IA
+              </button>
+            </div>
+          </div>
+
+          <!-- Grilla de Tarjetas (20 Proveedores) -->
+          <div
+            id="providers-grid"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <!-- Se puebla dinámicamente en window.onload -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: SOSTENIBILIDAD, FENALCO SOLIDARIO E ISO 14001 -->
+      <div id="tab-sustainability" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Detalle Carbono e ISO 14001 -->
+          <div
+            class="bg-white p-8 rounded-2xl border border-aecsa-border shadow-sm space-y-5"
+          >
+            <span class="aecsa-eyebrow">Auditoría Ambiental</span>
+            <h2 class="text-2xl font-bold text-aecsa-navy">
+              Integración del Sistema de Gestión ISO 14001:2015
+            </h2>
+            <p class="text-sm text-aecsa-grayMuted leading-relaxed">
+              Nuestra acreditación ambiental con
+              <strong>Bureau Veritas</strong> requiere evidencias demostrables
+              de mejora de la eficiencia y reducción de huella de carbono.
+              Tradicionalmente, la recolección manual de consumos de energía era
+              propensa a desviaciones administrativamente costosas.
+            </p>
+
+            <div
+              class="bg-[#012030] text-white p-6 rounded-2xl space-y-3 relative overflow-hidden"
+            >
+              <div
+                class="absolute -right-20 -top-20 w-48 h-48 rounded-full bg-aecsa-green/10 blur-2xl"
+              ></div>
+              <h4 class="font-bold text-aecsa-green text-sm">
+                📍 Relevancia del Bosque AECSA (Vaupés / Villa de Leyva)
+              </h4>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                En el Informe de Sostenibilidad 2025 de AECSA, se detalla el
+                compromiso voluntario de reforestación para compensar emisiones.
+                El despliegue de telemetría IoT HVAC previene la generación de
+                carbono en origen, permitiéndonos reportar 71.3 Toneladas de
+                CO₂e no emitidas adicionales a las 280 Toneladas compensadas.
+              </p>
+            </div>
+
+            <div
+              class="bg-aecsa-grayAlt p-5 rounded-xl border border-aecsa-border space-y-3"
+            >
+              <h4
+                class="font-bold text-aecsa-navy text-xs uppercase tracking-wider"
+              >
+                Cuantificación del Impacto de Carbono
+              </h4>
+              <div class="grid grid-cols-2 gap-4 text-center">
+                <div
+                  class="bg-white p-4 rounded-xl border border-aecsa-border shadow-sm"
+                >
+                  <span
+                    class="text-[9px] font-bold text-aecsa-grayMuted block uppercase"
+                    >Compensación Bosque</span
+                  >
+                  <span class="text-xl font-extrabold text-aecsa-navy"
+                    >280 Ton CO₂</span
+                  >
+                  <span class="text-[9px] text-aecsa-grayMuted block mt-1"
+                    >Capacidad Forestal</span
+                  >
+                </div>
+                <div
+                  class="bg-white p-4 rounded-xl border border-aecsa-border shadow-sm"
+                >
+                  <span
+                    class="text-[9px] font-bold text-aecsa-greenDark block uppercase"
+                    >Prevención Eléctrica IoT</span
+                  >
+                  <span class="text-xl font-extrabold text-aecsa-greenDark"
+                    >+71.3 Ton CO₂</span
+                  >
+                  <span class="text-[9px] text-aecsa-grayMuted block mt-1"
+                    >Evitado en Origen</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benchmarking Sector BPO Colombia -->
+          <div
+            class="bg-white p-8 rounded-2xl border border-aecsa-border shadow-sm space-y-5"
+          >
+            <span class="aecsa-eyebrow">Benchmarking Sectorial</span>
+            <h2 class="text-2xl font-bold text-aecsa-navy">
+              Intensidad Energética Sector BPO
+            </h2>
+            <p class="text-sm text-aecsa-grayMuted leading-relaxed">
+              Las operaciones de Call Center en Colombia consumen en promedio 42
+              kWh/m² al mes debido al funcionamiento descontrolado de aires
+              acondicionados centrales. Según el
+              <strong>Informe de Sostenibilidad 2025 de AECSA</strong>, nuestra
+              intensidad real es de <strong>39,4 kWh/m²/mes</strong>, la cual
+              proyectamos mitigar drásticamente a
+              <strong>30,7 kWh/m²/mes</strong>.
+            </p>
+
+            <div class="relative h-[250px] w-full">
+              <canvas id="chartBenchmarkBPO"></canvas>
+            </div>
+
+            <div
+              class="bg-aecsa-grayAlt p-4 rounded-xl border border-aecsa-border text-xs text-aecsa-grayMuted leading-relaxed"
+            >
+              <strong>Métrica Clave:</strong> Al reducir la intensidad
+              energética de climatización a solo
+              <strong>30,7 kWh/m²/mes</strong>, AECSA S.A.S. se posiciona en el
+              cuartil de máxima eficiencia de la industria del BPO en Colombia.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: CIENCIA DEL CONFORT (PMV/PPD DE OLE FANGER) -->
+      <div id="tab-science" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Detalle Científico -->
+          <div
+            class="bg-white p-8 rounded-2xl border border-aecsa-border shadow-sm lg:col-span-1 space-y-4"
+          >
+            <span class="aecsa-eyebrow">Normas ISO 7730 / ASHRAE 55</span>
+            <h2 class="text-2xl font-bold text-aecsa-navy">
+              Termodinámica de Confort Humano
+            </h2>
+            <p class="text-sm text-aecsa-grayMuted leading-relaxed">
+              El confort térmico se rige por el equilibrio térmico del cuerpo
+              con su entorno, considerando variables como:
+            </p>
+            <ul class="space-y-3 text-xs text-aecsa-grayMuted leading-relaxed">
+              <li class="flex items-start gap-2">
+                <span class="text-aecsa-orange">🔶</span>
+                <span
+                  ><strong>Voto Medio Previsto (PMV):</strong> Escala
+                  estadística de sensación que abarca de -3 (frío) a +3 (calor),
+                  situando el rango de bienestar reglamentario entre -0.5 y
+                  +0.5.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-aecsa-orange">🔶</span>
+                <span
+                  ><strong>Ocupantes insatisfechos (PPD):</strong> Índice
+                  matemático que estima que incluso en la neutralidad perfecta
+                  (PMV = 0), un 5% de los ocupantes manifestará disconfort
+                  térmico.</span
+                >
+              </li>
+            </ul>
+            <div
+              class="bg-aecsa-green/10 border border-aecsa-green/30 p-4 rounded-xl text-xs text-aecsa-navy leading-relaxed"
+            >
+              <strong>Compensación por demanda:</strong> Modificar dinámicamente
+              los setpoints de temperatura en solo 1.0°C cuando los sensores de
+              presencia reporten baja densidad reduce hasta un 8.5% el consumo
+              de los compresores de agua fría sin perturbar el bienestar.
+            </div>
+          </div>
+
+          <!-- Simulador de Fanger -->
+          <div
+            class="bg-white p-8 rounded-2xl border border-aecsa-border shadow-sm lg:col-span-2 space-y-6"
+          >
+            <div
+              class="flex justify-between items-center border-b border-aecsa-border pb-3"
+            >
+              <h3 class="font-extrabold text-aecsa-navy text-lg">
+                Simulación de la Curva de Inconformidad Térmica (Fanger)
+              </h3>
+              <span
+                class="bg-aecsa-navy text-aecsa-green text-[9px] font-bold px-2 py-1 rounded"
+                >ALINEADO A ISO 7730</span
+              >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Controles del Simulador -->
+              <div
+                class="bg-aecsa-grayAlt p-5 rounded-xl border border-aecsa-border space-y-4 md:col-span-1"
+              >
+                <div>
+                  <label class="text-xs font-bold text-aecsa-navy block mb-1"
+                    >Temperatura del Aire:</label
+                  >
+                  <input
+                    type="range"
+                    id="simTemp"
+                    min="16"
+                    max="30"
+                    step="0.5"
+                    value="22"
+                    class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    oninput="updateFangerSimulation()"
+                  />
+                  <div
+                    class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                  >
+                    <span>16°C</span>
+                    <span id="valSimTemp" class="font-bold text-aecsa-navy"
+                      >22.0°C</span
+                    >
+                    <span>30°C</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-bold text-aecsa-navy block mb-1"
+                    >Humedad Relativa:</label
+                  >
+                  <input
+                    type="range"
+                    id="simHum"
+                    min="20"
+                    max="80"
+                    step="5"
+                    value="50"
+                    class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    oninput="updateFangerSimulation()"
+                  />
+                  <div
+                    class="flex justify-between text-[10px] text-aecsa-grayMuted mt-1"
+                  >
+                    <span>20%</span>
+                    <span id="valSimHum" class="font-bold text-aecsa-navy"
+                      >50%</span
+                    >
+                    <span>80%</span>
+                  </div>
+                </div>
+
+                <div class="border-t border-aecsa-border pt-4 space-y-2">
+                  <span
+                    class="text-xs font-bold text-aecsa-navy uppercase block tracking-wider"
+                    >Resultados:</span
+                  >
+                  <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between text-aecsa-grayMuted">
+                      <span>Índice PMV:</span>
+                      <span id="resPmv" class="font-bold text-aecsa-greenDark"
+                        >0.12 (Neutral)</span
+                      >
+                    </div>
+                    <div class="flex justify-between text-aecsa-grayMuted">
+                      <span>Inconformidad (PPD):</span>
+                      <span id="resPpd" class="font-bold text-aecsa-orange"
+                        >5.3%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gráfico de Curva de Fanger con punto interactivo -->
+              <div class="md:col-span-2 relative h-[280px]">
+                <canvas id="chartFangerCurve"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: RUTA DE TRAMITACIÓN TRIBUTARIA LEY 1715 A 24 MESES -->
+      <div id="tab-roadmap" class="tab-content hidden space-y-6">
+        <div
+          class="bg-white p-8 rounded-2xl border border-aecsa-border shadow-sm"
+        >
+          <div class="border-b border-aecsa-border pb-5 mb-8">
+            <span class="aecsa-eyebrow">Cronograma de Ejecución</span>
+            <h2 class="text-2xl font-bold text-aecsa-navy mt-1">
+              PLAN DE DESPLIEGUE DE TECNOLOGÍA E INCENTIVOS (24 Meses)
+            </h2>
+            <p class="text-xs text-aecsa-grayMuted">
+              Estructura detallada para la radicación y aprobación de incentivos
+              en Colombia (UPME / ANLA).
+            </p>
+          </div>
+
+          <div
+            class="relative border-l-4 border-aecsa-navy ml-4 md:ml-8 space-y-10"
+          >
+            <!-- Hito 1 -->
+            <div class="relative pl-8 md:pl-10">
+              <div
+                class="absolute -left-[14px] top-1.5 bg-aecsa-green w-6 h-6 rounded-full border-4 border-aecsa-navy shadow-md"
+              ></div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                  <span
+                    class="bg-aecsa-navy text-aecsa-green text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider"
+                    >Meses 1 - 3</span
+                  >
+                  <h3 class="font-extrabold text-aecsa-navy text-lg mt-2">
+                    Ingeniería y radicación ante la UPME
+                  </h3>
+                </div>
+                <div
+                  class="md:col-span-2 text-sm text-aecsa-grayMuted leading-relaxed"
+                >
+                  Diseño de ingeniería detallado del sistema IoT HVAC para la
+                  Sede Américas. Consolidación de fichas técnicas de los
+                  sensores y estimación formal del ahorro energético en kWh
+                  anuales. Estructuración y radicación del expediente técnico
+                  ante la Unidad de Planeación Minero Energética (UPME) para
+                  solicitar el aval oficial de eficiencia energética.
+                </div>
+              </div>
+            </div>
+
+            <!-- Hito 2 -->
+            <div class="relative pl-8 md:pl-10">
+              <div
+                class="absolute -left-[14px] top-1.5 bg-aecsa-green w-6 h-6 rounded-full border-4 border-aecsa-navy shadow-md"
+              ></div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                  <span
+                    class="bg-aecsa-navy text-aecsa-green text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider"
+                    >Meses 4 - 6</span
+                  >
+                  <h3 class="font-extrabold text-aecsa-navy text-lg mt-2">
+                    Certificación de la ANLA
+                  </h3>
+                </div>
+                <div
+                  class="md:col-span-2 text-sm text-aecsa-grayMuted leading-relaxed"
+                >
+                  Obtención de la resolución favorable de la UPME y radicación
+                  inmediata ante la Autoridad Nacional de Licencias Ambientales
+                  (ANLA) para la expedición de la certificación de beneficio
+                  ambiental. Esto habilita la compra e importación de los
+                  equipos (sensores de CO₂, controladores inalámbricos y
+                  actuadores) con <strong>Exclusión del 19% de IVA</strong>,
+                  optimizando el flujo de caja del proyecto.
+                </div>
+              </div>
+            </div>
+
+            <!-- Hito 3 -->
+            <div class="relative pl-8 md:pl-10">
+              <div
+                class="absolute -left-[14px] top-1.5 bg-aecsa-green w-6 h-6 rounded-full border-4 border-aecsa-navy shadow-md"
+              ></div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                  <span
+                    class="bg-aecsa-navy text-aecsa-green text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider"
+                    >Meses 7 - 12</span
+                  >
+                  <h3 class="font-extrabold text-aecsa-navy text-lg mt-2">
+                    Despliegue e instalación física
+                  </h3>
+                </div>
+                <div
+                  class="md:col-span-2 text-sm text-aecsa-grayMuted leading-relaxed"
+                >
+                  Instalación física de los dispositivos de monitoreo en los
+                  pisos de operaciones del Call Center de AECSA S.A.S.
+                  Despliegue de la red inalámbrica segura (LoRaWAN o Zigbee)
+                  para evitar canalizaciones costosas. Puesta en marcha de los
+                  algoritmos de confort térmico del modelo de Fanger,
+                  recolectando telemetría inicial para el ajuste de los
+                  setpoints en horarios de alta ocupación.
+                </div>
+              </div>
+            </div>
+
+            <!-- Hito 4 -->
+            <div class="relative pl-8 md:pl-10">
+              <div
+                class="absolute -left-[14px] top-1.5 bg-aecsa-green w-6 h-6 rounded-full border-4 border-aecsa-navy shadow-md"
+              ></div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                  <span
+                    class="bg-aecsa-navy text-aecsa-green text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider"
+                    >Meses 13 - 24</span
+                  >
+                  <h3 class="font-extrabold text-aecsa-navy text-lg mt-2">
+                    Operación continua y retorno de renta
+                  </h3>
+                </div>
+                <div
+                  class="md:col-span-2 text-sm text-aecsa-grayMuted leading-relaxed"
+                >
+                  Consolidación de ahorros operativos y energéticos. Integración
+                  automática de la telemetría IoT con el Sistema de Gestión
+                  Ambiental (SGA) para facilitar las auditorías de Bureau
+                  Veritas. Aplicación de la Deducción especial de renta (50% de
+                  la inversión) en las declaraciones tributarias de AECSA,
+                  completando el retorno financiero del proyecto.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: ASISTENTE INTELIGENTE IA -->
+      <div id="tab-ai" class="tab-content hidden space-y-6">
+        <div
+          class="bg-white p-6 rounded-2xl border border-aecsa-border shadow-sm"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-aecsa-border pb-5 mb-6"
+          >
+            <div>
+              <span class="aecsa-eyebrow text-indigo-700"
+                >USO DE INTELIGENCIA ARTIFICIAL</span
+              >
+              <h2 class="text-xl font-bold text-aecsa-navy mt-1">
+                Consultor Técnico y Sostenibilidad IoT (Gemini 2.5 Flash)
+              </h2>
+              <p class="text-xs text-aecsa-grayMuted">
+                Realiza consultas avanzadas sobre tu proyecto con un modelo de
+                IA sintonizado específicamente con los datos y metas de AECSA
+                S.A.S.
+              </p>
+            </div>
+            <!-- Opcional de Clave API si no se inyecta por el contenedor -->
+            <div class="flex items-center gap-2">
+              <label class="text-[10px] font-bold text-slate-500 uppercase"
+                >Clave Gemini (Opcional):</label
+              >
+              <input
+                type="password"
+                id="gemini-key-input"
+                placeholder="Se autodetecta..."
+                class="text-xs p-2 rounded-lg border border-slate-300 w-44 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Panel de Consultas Rápidas (Sugerencias) -->
+            <div class="lg:col-span-1 space-y-4">
+              <h3
+                class="font-extrabold text-aecsa-navy text-xs uppercase tracking-wider border-b border-slate-100 pb-2"
+              >
+                💡 Preguntas Frecuentes de la Junta
+              </h3>
+              <button
+                onclick="
+                  askPreset(
+                    '¿Cómo contribuye exactamente este proyecto de climatización IoT al cumplimiento de la norma ISO 14001:2015 y la auditoría con Bureau Veritas de AECSA S.A.S.?',
+                  )
+                "
+                class="w-full text-left text-xs bg-aecsa-grayAlt hover:bg-slate-200 p-3 rounded-xl border border-slate-200 text-slate-700 transition-all font-medium leading-relaxed"
+              >
+                🌿 ¿Cómo apoya la ISO 14001:2015 de AECSA?
+              </button>
+              <button
+                onclick="
+                  askPreset(
+                    'Explica cómo el modelo de confort PMV/PPD de Fanger puede ser implementado mediante sensores IoT en una oficina con alta densidad de agentes partiendo de la intensidad actual de 39.4 kWh/m²/mes de AECSA.',
+                  )
+                "
+                class="w-full text-left text-xs bg-aecsa-grayAlt hover:bg-slate-200 p-3 rounded-xl border border-slate-200 text-slate-700 transition-all font-medium leading-relaxed"
+              >
+                🧪 Explicación de Fanger en la Sede Américas
+              </button>
+              <button
+                onclick="
+                  askPreset(
+                    'Detalla el beneficio financiero total inmediato y a 5 años del proyecto para AECSA S.A.S. aplicando todos los incentivos fiscales de la Ley 1715 de 2014 en Colombia.',
+                  )
+                "
+                class="w-full text-left text-xs bg-aecsa-grayAlt hover:bg-slate-200 p-3 rounded-xl border border-slate-200 text-slate-700 transition-all font-medium leading-relaxed"
+              >
+                ⚖ ¿Cuáles son los beneficios fiscales de Ley 1715?
+              </button>
+
+              <div
+                class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-900 leading-relaxed"
+              >
+                <strong>Contexto Pre-alimentado:</strong> El modelo tiene acceso
+                a las especificaciones de tus 20 proveedores, las tarifas de
+                Bogotá, el balance energético y las metas de tu Informe de
+                Sostenibilidad 2025.
+              </div>
+            </div>
+
+            <!-- Chat logs e interacción -->
+            <div
+              class="lg:col-span-2 flex flex-col h-[450px] border border-slate-200 rounded-2xl bg-slate-50 overflow-hidden shadow-inner"
+            >
+              <!-- Ventana de Chat Histórico -->
+              <div
+                id="ai-chat-log"
+                class="flex-grow p-4 overflow-y-auto space-y-4 text-xs"
+              >
+                <div class="flex items-start gap-2 max-w-[85%]">
+                  <span class="text-xl bg-indigo-100 p-1.5 rounded-lg">🤖</span>
+                  <div
+                    class="bg-white p-3 rounded-2xl border border-slate-200 text-slate-700 leading-relaxed shadow-sm"
+                  >
+                    ¡Hola! Soy tu
+                    <strong
+                      >Consultor de Climatización Inteligente y Sostenibilidad
+                      de AECSA S.A.S.</strong
+                    >
+                    ¿En qué puedo asistirte hoy? Puedo analizar proveedores,
+                    formular estrategias para la UPME, o detallar cómo tu
+                    proyecto reduce la huella de carbono partiendo de tu consumo
+                    auditado de <strong>39,4 kWh/m²/mes</strong>.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Caja de Entrada de Texto -->
+              <div class="p-3 bg-white border-t border-slate-200 flex gap-2">
+                <input
+                  type="text"
+                  id="ai-user-query"
+                  placeholder="Escribe tu consulta sobre el proyecto o proveedores..."
+                  onkeydown="handleChatKey(event)"
+                  class="flex-grow p-3 rounded-xl border border-slate-300 text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onclick="sendMessageToAI()"
+                  id="ai-send-btn"
+                  class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-md shadow-indigo-100 flex items-center gap-1.5 shrink-0"
+                >
+                  <span>Enviar</span> 🚀
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- MODAL DE FICHA TÉCNICA DE PROVEEDORES (DINÁMICO) -->
+    <div
+      id="spec-modal"
+      class="fixed inset-0 bg-aecsa-navy/70 backdrop-blur-sm z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-lg w-full p-8 m-4 shadow-2xl relative border-t-8 border-aecsa-green"
+      >
+        <button
+          onclick="closeSpecModal()"
+          class="absolute top-4 right-4 text-aecsa-grayMuted hover:text-aecsa-navy text-2xl font-bold transition-colors"
+        >
+          &times;
+        </button>
+        <span class="aecsa-eyebrow">ESPECIFICACIONES INDUSTRIALES</span>
+        <h3 id="modalTitle" class="text-xl font-bold text-aecsa-navy mt-1 mb-4">
+          Ficha Técnica
+        </h3>
+        <div
+          id="modalContent"
+          class="space-y-4 text-sm text-aecsa-grayMuted leading-relaxed overflow-y-auto max-h-[50vh]"
+        >
+          <!-- Inyección dinámica de JS -->
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button
+            onclick="closeSpecModal()"
+            class="bg-aecsa-navy text-white px-6 py-2.5 rounded-xl font-bold hover:bg-aecsa-navy/90 border border-aecsa-navy hover:border-aecsa-green transition-all text-xs tracking-wider uppercase"
+          >
+            Cerrar Ficha Técnica
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE REPORTES GENERADOS POR IA (DINÁMICO) -->
+    <div
+      id="ai-report-modal"
+      class="fixed inset-0 bg-aecsa-navy/70 backdrop-blur-sm z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-3xl w-full p-8 m-4 shadow-2xl relative border-t-8 border-indigo-600"
+      >
+        <button
+          onclick="closeAIReportModal()"
+          class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold transition-colors"
+        >
+          &times;
+        </button>
+        <span class="aecsa-eyebrow text-indigo-700"
+          >Inteligencia Generativa de Sostenibilidad</span
+        >
+        <h3
+          id="aiReportTitle"
+          class="text-2xl font-bold text-aecsa-navy mt-1 mb-4"
+        >
+          Reporte Estratégico IA
+        </h3>
+        <div
+          id="aiReportContent"
+          class="space-y-4 text-sm text-slate-700 leading-relaxed overflow-y-auto max-h-[55vh] pr-2 border-t border-b border-slate-100 py-4 font-mono whitespace-pre-line bg-slate-50 p-4 rounded-xl"
+        >
+          <!-- Inyección de respuesta Gemini -->
+        </div>
+        <div class="mt-6 flex justify-between items-center">
+          <p class="text-[10px] text-slate-400 italic">
+            Generado con gemini-2.5-flash-preview-09-2025 en tiempo real.
+          </p>
+          <button
+            onclick="closeAIReportModal()"
+            class="bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-800 transition-all text-xs tracking-wider uppercase shadow-md shadow-indigo-100"
+          >
+            Entendido, cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIE DE PÁGINA (FOOTER EN NIVELES DE AZUL NAVY) -->
+    <footer
+      class="bg-aecsa-navy text-slate-400 text-xs py-10 border-t-4 border-aecsa-green mt-12"
+    >
+      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="space-y-3">
+          <div
+            class="text-white font-extrabold text-lg flex items-center gap-1.5 max-w-[208px]"
+          >
+            <svg
+              viewBox="0 0 208 40"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-10"
+            >
+              <path
+                d="M140.964 12.8343C141.098 12.945 141.242 13.0419 141.395 13.1234C141.246 13.0345 141.103 12.938 140.964 12.8343ZM140.33 9.77386C140.404 9.64176 140.486 9.51457 140.577 9.39307C140.484 9.51287 140.401 9.64025 140.33 9.77386Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M158.551 26.4584C158.551 29.6317 157.95 32.2174 156.746 34.2154C155.598 36.1439 153.87 37.6614 151.81 38.5522C149.563 39.5134 147.139 39.9938 144.695 39.9625C142.661 39.9741 140.631 39.778 138.637 39.3772C136.877 39.0305 135.201 38.3456 133.701 37.3604C132.244 36.3626 131.088 34.9846 130.359 33.3762C129.487 31.3524 129.073 29.1613 129.146 26.9591V26.6559C129.145 26.5134 129.162 26.3714 129.195 26.2328H138.503C138.454 26.4884 138.431 26.7482 138.433 27.0085C138.436 27.7299 138.623 28.4387 138.974 29.0688C139.325 29.6989 139.831 30.2298 140.443 30.6119C141.691 31.3196 143.143 31.5831 144.561 31.3594C145.731 31.2113 147.099 30.8799 147.819 29.8574C148.097 29.4159 148.25 28.907 148.261 28.3853C148.272 27.8636 148.141 27.3487 147.882 26.8956C147.325 25.9084 146.211 25.4218 145.231 24.9846C143.682 24.3234 142.089 23.7697 140.464 23.3275C138.087 22.6223 135.718 21.9171 133.68 20.4362C132.785 19.7985 131.995 19.0253 131.339 18.1444C130.154 16.4453 129.562 14.4032 129.653 12.3338C129.597 10.3656 129.988 8.41028 130.796 6.61481C131.511 5.11145 132.586 3.80818 133.927 2.82097C135.291 1.84087 136.827 1.12346 138.454 0.705449C140.193 0.241972 141.985 0.00495486 143.785 0.000274071C145.584 -0.00922116 147.375 0.228049 149.109 0.705449C150.702 1.144 152.199 1.87579 153.524 2.86328C154.81 3.83816 155.847 5.1046 156.549 6.5584C157.321 8.22597 157.711 10.0449 157.691 11.8825V12.5524H148.221C148.379 11.6089 148.213 10.6396 147.749 9.80267C147.286 8.96572 146.553 8.31051 145.669 7.94395C144.785 7.5774 143.804 7.52113 142.884 7.78433C141.964 8.04754 141.161 8.61467 140.605 9.3932C140.512 9.513 140.429 9.64038 140.358 9.774C140.177 10.1276 140.083 10.5192 140.083 10.9164C140.082 11.2812 140.162 11.6418 140.317 11.9721C140.472 12.3025 140.698 12.5946 140.978 12.8274C141.108 12.9396 141.25 13.0366 141.402 13.1165C141.867 13.391 142.361 13.6133 142.875 13.7794C143.757 14.0826 144.751 14.3576 145.844 14.6256L147.001 14.9006C147.741 15.084 148.503 15.2814 149.278 15.493C150.457 15.8091 151.604 16.2316 152.705 16.7552C153.801 17.2727 154.806 17.9632 155.681 18.8002C156.594 19.6795 157.314 20.7384 157.797 21.9101C158.355 23.3571 158.619 24.9011 158.573 26.4514"
+                fill="#c0dd17"
+              />
+              <path
+                d="M120.359 31.028L121.77 31.7331C120.584 33.3783 119.158 34.8356 117.538 36.0558C113.166 39.2486 107.708 40.5821 102.356 39.7651C98.7916 39.1705 95.4525 37.6288 92.6881 35.3013L92.4272 35.0757L92.1522 34.8288C91.9477 34.6455 91.7432 34.4551 91.5457 34.2577C89.3919 32.1723 87.7464 29.6196 86.7364 26.7969L86.6307 26.4937C86.5813 26.3526 86.539 26.2116 86.4896 26.0635C86.4896 26.0635 86.4896 26.0635 86.4896 26.0212C86.4479 25.9033 86.4126 25.7833 86.3838 25.6616C86.3642 25.6062 86.3477 25.5496 86.3345 25.4923C86.3067 25.4119 86.2855 25.3294 86.271 25.2455L86.1864 24.9211C86.1821 24.9098 86.1821 24.8972 86.1864 24.8859C86.1441 24.7096 86.1018 24.5333 86.0665 24.357C85.7989 23.1212 85.6501 21.8626 85.6223 20.5984C85.6223 20.4715 85.6223 20.3516 85.6223 20.2317V20.0625C85.6223 19.7334 85.6223 19.402 85.6223 19.0682C85.6223 18.8143 85.6223 18.5605 85.6787 18.3066C85.7351 18.0527 85.6787 17.954 85.728 17.7777C85.7774 17.6014 85.728 17.4745 85.7844 17.3194C85.8409 17.1642 85.7844 17.0937 85.8338 16.9879C85.8832 16.8821 85.8338 16.7552 85.8902 16.6424C86.4988 12.7417 88.2681 9.11477 90.9675 6.23401C92.1024 5.03887 93.3815 3.98951 94.7754 3.11008L95.0575 2.93379L95.3255 2.7716L95.671 2.5671L96.1505 2.30618L96.4678 2.13694L96.7993 1.97475L97.2365 1.77025L97.6807 1.5728L98.1603 1.41061L98.6116 1.23432C102.741 -0.276891 107.253 -0.387969 111.452 0.918208C115.651 2.22439 119.304 4.8753 121.847 8.46236L117.249 10.9939L112.073 13.6595C111.091 12.618 109.886 11.8127 108.547 11.3042C107.618 10.996 106.643 10.8458 105.663 10.86C104.41 10.8605 103.168 11.0998 102.003 11.5651C100.881 11.9996 99.8576 12.6541 98.9924 13.4903C98.1331 14.3342 97.4395 15.3316 96.9474 16.4308C96.4323 17.5691 96.1723 18.8062 96.1858 20.0554C96.1702 21.3276 96.43 22.5882 96.9474 23.7505C97.4379 24.8486 98.1318 25.844 98.9924 26.6841C99.866 27.5238 100.887 28.1955 102.003 28.6656C103.165 29.1397 104.409 29.3794 105.663 29.3708C106.542 29.3791 107.417 29.2555 108.258 29.0041C108.59 28.8913 108.9 28.7573 109.21 28.6163C110.27 28.1194 111.227 27.4281 112.031 26.5783L120.359 31.028Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M60.1795 9.55548V15.5495L72.1534 15.5354V24.5686L60.1795 24.5757V30.5767H76.5678V39.5889H49.4256L49.4538 0.515137H76.5678V9.55548H60.1795Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M44.6658 39.5888H32.7342L22.3329 21.1767L11.9316 39.5888H0L22.3329 0.381104L44.6658 39.5888Z"
+                fill="#c0dd17"
+              />
+              <path
+                d="M207.378 39.5888H195.453L185.045 21.1767L174.644 39.5888H162.712L185.045 0.381104L207.378 39.5888Z"
+                fill="#c0dd17"
+              />
+            </svg>
+          </div>
+          <p class="leading-relaxed text-slate-400">
+            Investigación realizada para identificar oportunidades de mejora en
+            confort térmico y eficiencia operativa.
+          </p>
+        </div>
+        <div class="space-y-3">
+          <h4 class="font-bold text-white text-sm">
+            Compromisos de Sostenibilidad
+          </h4>
+          <p class="leading-relaxed text-slate-400">
+            Alineado al Informe de Sostenibilidad 2025, Certificación de Carbono
+            Neutro (Fenalco Solidario), Empresa B Certificada y Sistema de
+            Gestión ISO 14001:2015.
+          </p>
+        </div>
+        <div class="space-y-3">
+          <h4 class="font-bold text-white text-sm">Lema Corporativo</h4>
+          <p class="aecsa-tagline text-lg text-aecsa-green">
+            Amor, pasión, eficiencia e innovación
+          </p>
+          <p class="leading-relaxed text-slate-500">
+            Estado de Innovación AECSA
+          </p>
+        </div>
+      </div>
+      <div
+        class="max-w-7xl mx-auto px-6 mt-8 pt-6 border-t border-slate-800 text-center text-[10px] text-slate-500"
+      >
+        © 2026 AECSA S.A.S. Todos los derechos reservados. Todas las
+        especificaciones de hardware y estimaciones de precios corresponden a
+        cotizaciones estándar del mercado colombiano.
+      </div>
+    </footer>
+
+    <!-- UI Chatbot -->
+    <!-- Botón flotante -->
+    <button id="chat-widget-btn" aria-label="Abrir chat de ayuda">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+        />
+      </svg>
+    </button>
+
+    <!-- Panel del chat -->
+    <div id="chat-widget-panel">
+      <div id="chat-widget-header">
+        <div>
+          <div class="title">Asistente virtual</div>
+          <div class="subtitle">Pregúntame sobre esta página</div>
+        </div>
+        <button id="chat-widget-close" aria-label="Minimizar chat">✕</button>
+      </div>
+      <div id="chat-widget-messages"></div>
+      <form id="chat-widget-form">
+        <input
+          id="chat-widget-input"
+          type="text"
+          placeholder="Escribe tu pregunta..."
+          autocomplete="off"
+        />
+        <button id="chat-widget-send" type="submit" aria-label="Enviar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2 21l21-9L2 3v7l15 2-15 2z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- LÓGICA DE CONTROL DE LA SPA (TABS, CALCULADORA, GRÁFICOS Y GEMINI API) -->
+    <script>
+      // Variables globales para instancias de Chart.js
+      let chartRetornoInstance = null;
+      let chartBenchmarkInstance = null;
+      let chartFangerInstance = null;
+
+      // Control de Diccionario/Glosario Técnico
+      function toggleGlossary() {
+        const modal = document.getElementById("glossary-modal");
+        modal.classList.toggle("hidden");
+      }
+
+      // Base de datos de 20 Proveedores (10 Nacionales y 10 Internacionales)
+      const allProviders = [
+        // NACIONALES (1 - 10)
+        {
+          id: 1,
+          title: "Oclima S.A.S.",
+          category: "nacionales",
+          tag: "Ingeniería de Climatización",
+          description:
+            "Expertos colombianos en proyectos de climatización de alta eficiencia, diseño de distritos térmicos y auditorías energéticas integradas.",
+          connectivity: "BACnet / Modbus RTU / Lógica PLC",
+          price: "$ 5.800.000 COP / Zona",
+          support: "Soporte Local Bogotá y Medellín 24/7",
+          specs: `
+          <p><strong>Clasificación:</strong> Especialista en Ingeniería de Climatización Eficiente y Auditoría de Redes Térmicas (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> BACnet, Modbus RTU e integración de control con PLC programables.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Dampers de precisión motorizados Belimo con sensores integrados de temperatura Oclima.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Del 18% al 24% del consumo de climatización total en call centers y oficinas de alta densidad en Colombia.</p>
+          <p><strong>Soporte Técnico Local:</strong> Mesa de ayuda presencial permanente y guardia técnica en Bogotá y Medellín.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Implementación y sensorización promedio de $ 5.800.000 COP por zona de operación, con póliza de mantenimiento integral el primer año.</p>
+        `,
+        },
+        {
+          id: 2,
+          title: "Belimo / Laminaire S.A.S.",
+          category: "nacionales",
+          tag: "Balance de Caudal",
+          description:
+            "Válvulas electrónicas ultrasónicas Energy Valve™ que eliminan pérdidas térmicas en chillers centrales.",
+          connectivity: "BACnet / Modbus / PoE",
+          price: "$ 6.150.000 COP / Válvula",
+          support: "Distribuidor Bogotá",
+          specs: `
+          <p><strong>Clasificación:</strong> Válvulas y Actuadores Electrónicos para Balance Hidrónico Inteligente (Nacional/Distribución).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> BACnet MSTP / Modbus RTU / Interfaz Power over Ethernet (PoE).</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Válvula de control inteligente Belimo Energy Valve™ con medidor de caudal ultrasónico.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Mitiga el síndrome de bajo Delta T en enfriadores de agua (chillers), logrando de 12% a 18% de reducción eléctrica central.</p>
+          <p><strong>Soporte Técnico Local:</strong> Representación directa y soporte de ingeniería por Laminaire S.A.S. en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> $ 6.150.000 COP por válvula instalada y configurada bajo el estándar de balanceo de caudal.</p>
+        `,
+        },
+        {
+          id: 3,
+          title: "Quantum T&S",
+          category: "nacionales",
+          tag: "Servidores Niagara",
+          description:
+            "Socio de ingeniería con sede en Bogotá que unifica plataformas heredadas utilizando Niagara Framework.",
+          connectivity: "Niagara JACE 8000 / Multi-bus",
+          price: "$ 18.450.000 COP Servidor",
+          support: "Bogotá - 24/7 SLA",
+          specs: `
+          <p><strong>Clasificación:</strong> Integrador Oficial Niagara Framework de Sistemas de Automatización de Edificios (BMS) (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Integración multi-protocolo unificada (Modbus TCP/RTU, BACnet, LonWorks).</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Servidor de supervisión Niagara JACE 8000 con tarjetas de expansión analógicas/digitales.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Unifica la climatización con el monitoreo eléctrico y de iluminación, logrando un 15% de reducción operativa directa.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede principal en Bogotá con contratos de asistencia presencial y acuerdos de nivel de servicio (SLA) 24/7.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Licenciamiento del Niagara Framework y servidor JACE 8000 a partir de $ 18.450.000 COP.</p>
+        `,
+        },
+        {
+          id: 4,
+          title: "TING S.A.S. (Milesight IoT)",
+          category: "nacionales",
+          tag: "Monitoreo Ambiental LoRa",
+          description:
+            "Telemetría de largo alcance con pantalla de tinta electrónica AM103 para CO₂ y confort térmico.",
+          connectivity: "LoRaWAN Inalámbrico",
+          price: "$ 14.350.000 COP Starter Kit",
+          support: "Ingeniería en Bogotá",
+          specs: `
+          <p><strong>Clasificación:</strong> Red de Suministro de Sensores Inalámbricos de Largo Alcance (LoRaWAN) (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Protocolo LoRaWAN inalámbrico de baja frecuencia de excelente penetración estructural.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Sensor Ambiental Milesight AM103 (lectura de CO₂, temperatura, humedad y luz ambiental con pantalla E-ink).</p>
+          <p><strong>Ahorro Energético Medido:</strong> Alerta inmediata de desviaciones ambientales que aporta de 8% a 12% de ahorro preventivo de mantenimiento.</p>
+          <p><strong>Soporte Técnico Local:</strong> Distribuidor certificado de Milesight con soporte en Bogotá en TING S.A.S.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Kit de inicio comercial (Gateway Industrial LoRaWAN + 10 Sensores Ambientales con batería) por un valor de $ 14.350.000 COP.</p>
+        `,
+        },
+        {
+          id: 5,
+          title: "TSI (Technology & System Industries)",
+          category: "nacionales",
+          tag: "Integrador de Sistemas",
+          description:
+            "Integradores e ingenieros de automatización para grandes corporativos con soporte local Honeywell.",
+          connectivity: "BACnet / Modbus TCP / IP",
+          price: "$ 85.000.000 COP Proyecto",
+          support: "Garantía Extendida TSI",
+          specs: `
+          <p><strong>Clasificación:</strong> Integrador Autorizado de Sistemas HVAC de Grado Comercial y Redes de Supervisión (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Redes de comunicación abiertas BACnet MSTP / IP y Modbus TCP.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Controladores programables Honeywell Spyder y sensores de conducto.</p>
+          <p><strong>Ahorro Energético Medido:</strong> En promedio un 18% de reducción eléctrica de manejadoras mediante algoritmos personalizados de setpoint.</p>
+          <p><strong>Soporte Técnico Local:</strong> Equipo de ingeniería en Bogotá para soporte preventivo trimestral.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Soluciones de automatización de zonas para oficinas de alta ocupación desde $ 85.000.000 COP.</p>
+        `,
+        },
+        {
+          id: 6,
+          title: "Clima Proyecto S.A.S.",
+          category: "nacionales",
+          tag: "Consultoría e Instalación",
+          description:
+            "Firma colombiana de consultoría e instalación de sistemas VRF y ventilación bioclimática para Call Centers.",
+          connectivity: "Modbus RTU / Enlace VRF",
+          price: "$ 45.000.000 COP Planta",
+          support: "Soporte Nacional Directo",
+          specs: `
+          <p><strong>Clasificación:</strong> Consultoría e Instalación de Sistemas de Climatización Mecánica de Alta Eficiencia (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Redes seriales Modbus integradas de fábrica en unidades de climatización.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Condensadoras de flujo refrigerante variable (VRF) de alta eficiencia.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Reducción de hasta el 25% comparado con unidades tipo paquete de velocidad fija tradicionales.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede en Bogotá y Cali para suministro de partes de repuesto inmediatas.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Modificación estructural e ingeniería de climatización desde $ 45.000.000 COP.</p>
+        `,
+        },
+        {
+          id: 7,
+          title: "Termo Aire Colombia",
+          category: "nacionales",
+          tag: "Mantenimiento Predictivo",
+          description:
+            "Sistemas nacionales de aire de precisión para salas de cómputo y auditoría de confort en oficinas.",
+          connectivity: "BACnet MSTP / Modbus",
+          price: "$ 3.200.000 COP Unidad",
+          support: "Póliza Mensual Bogotá",
+          specs: `
+          <p><strong>Clasificación:</strong> Suministro, Mantenimiento y Calibración de Sistemas de Aire de Precisión (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Buses de campo seriales BACnet MSTP de comunicación rápida.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Unidades de climatización de precisión con control de microprocesador.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Control estable que previene picos de corriente, logrando 10% de ahorro directo en subestaciones.</p>
+          <p><strong>Soporte Técnico Local:</strong> Ingenieros de campo dedicados con SLA de atención de 4 horas en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Instalación de módulos controladores y monitoreo térmico desde $ 3.200.000 COP por unidad de aire.</p>
+        `,
+        },
+        {
+          id: 8,
+          title: "AireAire S.A.S.",
+          category: "nacionales",
+          tag: "Sensorización a Medida",
+          description:
+            "Empresa de tableros de control PLC y monitoreo ambiental para oficinas corporativas en Bogotá.",
+          connectivity: "Modbus TCP / MQTT",
+          price: "$ 9.500.000 COP Tablero",
+          support: "Ingeniería Presencial",
+          specs: `
+          <p><strong>Clasificación:</strong> Ingeniería de Tableros de Control y Sensorización Analógica/Digital (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Modbus TCP y protocolos ligeros IoT en la nube como MQTT.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> PLC industriales acoplados a transductores de temperatura y humedad relativa de alta resolución.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Evita sobreenfriamientos nocturnos mediante la programación lógica horaria, reduciendo un 14% de gasto innecesario.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede operativa en Bogotá con ingenieros de desarrollo de software.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Tableros de control IoT integrados a manejadoras existentes desde $ 9.500.000 COP por piso de operación.</p>
+        `,
+        },
+        {
+          id: 9,
+          title: "IHR Minería y Energía S.A.S.",
+          category: "nacionales",
+          tag: "Consultoría de Eficiencia",
+          description:
+            "Especialistas en auditoría de redes eléctricas, proyectos de cogeneración y gestiones UPME.",
+          connectivity: "BACnet IP / API Rest",
+          price: "$ 12.000.000 COP Estudio",
+          support: "Consultoría Especializada",
+          specs: `
+          <p><strong>Clasificación:</strong> Consultores de Eficiencia Energética y Radicación ante Organismos del Estado (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Integración de datos para la generación de reportes automáticos de eficiencia energética.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Medidores de energía avanzados certificados clase 0.2S.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Soporte de ingeniería para la correcta configuración que garantiza viabilidad de la Ley 1715.</p>
+          <p><strong>Soporte Técnico Local:</strong> Consultores jurídicos y técnicos basados en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Estructuración de expediente y radicación ante UPME/ANLA por $ 12.000.000 COP por proyecto radicado.</p>
+        `,
+        },
+        {
+          id: 10,
+          title: "Sinergia Automatización S.A.S.",
+          category: "nacionales",
+          tag: "Telemetría Industrial",
+          description:
+            "Especialistas en automatización y sensorización inalámbrica para el sector BPO con plataforma web.",
+          connectivity: "LoRaWAN / HTTP Webhook",
+          price: "$ 11.800.000 COP Licencia",
+          support: "Soporte Remoto e In-Situ",
+          specs: `
+          <p><strong>Clasificación:</strong> Desarrollo de Plataformas de Visualización y Telemetría Industrial IoT (Nacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Telemetría inalámbrica y pasarelas de conexión integradas vía webhooks.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Sondas de temperatura PT100 y sensores de CO₂ con certificación de calibración.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Aporta un 10% de reducción en costos operativos al automatizar los flujos de aire exterior por ocupación.</p>
+          <p><strong>Soporte Técnico Local:</strong> Soporte técnico virtual de respuesta rápida y visitas presenciales programadas.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Suministro de software SCADA web de monitoreo y 5 nodos de sensorización por $ 11.800.000 COP.</p>
+        `,
+        },
+
+        // INTERNACIONALES (11 - 20)
+        {
+          id: 11,
+          title: "Trane / BrainBox AI",
+          category: "internacionales",
+          tag: "Algoritmos en Nube",
+          description:
+            "Algoritmos de inteligencia artificial autónomos que optimizan setpoints anticipándose al clima exterior.",
+          connectivity: "BACnet IP / API Cloud",
+          price: "$ 32.800.000 COP Configuración",
+          support: "Trane Colombia",
+          specs: `
+          <p><strong>Clasificación:</strong> Software de Eficiencia Térmica con Algoritmos Predictivos Autónomos (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Protocolo BACnet IP con conexión segura en la nube (Cloud-to-Cloud).</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Controlador de automatización y supervisión Trane Symbio® 800.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Del 20% al 25% de la carga de potencia total consumida por el sistema de climatización central.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede corporativa Trane Colombia en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Conexión inicial del algoritmo y configuración (Setup) de $ 32.800.000 COP, complementado con una suscripción mensual (SaaS) recurrente de $ 1.230.000 COP.</p>
+        `,
+        },
+        {
+          id: 12,
+          title: "75F Smart Buildings",
+          category: "internacionales",
+          tag: "Sensores Inalámbricos",
+          description:
+            "Balanceo térmico por zonas mediante compuertas motorizadas inalámbricas de instalación rápida.",
+          connectivity: "Inalámbrica 900 MHz",
+          price: "$ 41.000 COP / m²",
+          support: "Canales Certificados",
+          specs: `
+          <p><strong>Clasificación:</strong> Sistema Inalámbrico Adaptativo de Balance Térmico de Oficinas (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Red inalámbrica segura en el rango de 900 MHz y API en la nube.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Unidad Central de Control (CCU) y Termostatos Inteligentes de Zona HyperStat con monitoreo de CO₂.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Hasta un 30% en potencia de ventiladores de velocidad variable gracias al control inteligente de compuertas.</p>
+          <p><strong>Soporte Técnico Local:</strong> Distribuidores locales e integradores autorizados en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Aproximadamente $ 41.000 COP por metro cuadrado de instalación llave en mano, incluyendo todo el hardware y licenciamiento de software.</p>
+        `,
+        },
+        {
+          id: 13,
+          title: "Honeywell Commercial",
+          category: "internacionales",
+          tag: "Termostatos Precisión",
+          description:
+            "Termostatos comerciales de alta precisión y automatizadores de compuertas proporcionales.",
+          connectivity: "BACnet MSTP / Wifi",
+          price: "$ 1.025.000 COP Unidad",
+          support: "Soporte Global",
+          specs: `
+          <p><strong>Clasificación:</strong> Termostatos Inteligentes e Integradores de Zona HVAC (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Red inalámbrica Wi-Fi empresarial y bus de datos de campo BACnet MSTP.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Termostatos de precisión de zona comerciales Honeywell.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Evita el sobreenfriamiento de áreas vacías en horarios rotativos, reduciendo del 10% al 15% del consumo eléctrico.</p>
+          <p><strong>Soporte Técnico Local:</strong> Canales de ingeniería comercial y redes de integradores a nivel nacional.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> $ 1.025.000 COP por termostato instalado y configurado bajo el sistema central.</p>
+        `,
+        },
+        {
+          id: 14,
+          title: "Schneider Electric",
+          category: "internacionales",
+          tag: "EcoStruxure Suite",
+          description:
+            "Plataforma integral de administración energética para plantas industriales y subestaciones eléctricas.",
+          connectivity: "Modbus / BACnet / Zigbee",
+          price: "Desde $ 102.500.000 COP",
+          support: "Schneider Colombia",
+          specs: `
+          <p><strong>Clasificación:</strong> Arquitectura de Gestión Energética Industrial y Supervisión EcoStruxure (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Modbus TCP, BACnet IP y bus inalámbrico Zigbee.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Controladores lógicos programables Modicon y EcoStruxure Automation Servers.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Permite reducciones de hasta un 25% mediante compensaciones lógicas automáticas de caudal de aire.</p>
+          <p><strong>Soporte Técnico Local:</strong> Corporativo Schneider Electric Colombia con cobertura técnica nacional.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Licenciamiento del sistema base y servidores lógicos desde $ 102.500.000 COP.</p>
+        `,
+        },
+        {
+          id: 15,
+          title: "Siemens (Desigo CC)",
+          category: "internacionales",
+          tag: "Chiller Automation",
+          description:
+            "Automatización de plantas centrales complejas de agua fría y ventilación forzada en oficinas.",
+          connectivity: "BACnet IP / KNX / SNMP",
+          price: "Desde $ 143.500.000 COP",
+          support: "Siemens Colombia",
+          specs: `
+          <p><strong>Clasificación:</strong> Estación Global de Ingeniería y Supervisión de Infraestructura Crítica (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> BACnet IP, interfaces de iluminación KNX y puertos SNMP.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Controladores modulares programables Desigo PXC.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Optimiza el flujo de velocidad variable en ventilación y enfriamiento de agua, con ahorros del 20% al 30%.</p>
+          <p><strong>Soporte Técnico Local:</strong> Soporte de ingeniería de primer nivel a través de Siemens Colombia en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Estación de software Desigo CC and controladores de planta central desde $ 143.500.000 COP.</p>
+        `,
+        },
+        {
+          id: 16,
+          title: "Sauter Colombia",
+          category: "internacionales",
+          tag: "Precisión Suiza",
+          description:
+            "Controladores de precisión y sensores de flujo de ductos ideales para laboratorios y centros de cómputo.",
+          connectivity: "BACnet / LonWorks / IP",
+          price: "Desde $ 82.000.000 COP",
+          support: "Ingeniería Especializada",
+          specs: `
+          <p><strong>Clasificación:</strong> Controladores Lógicos y Actuadores de Alta Precisión de Estándar Suizo (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Protocolos abiertos BACnet / Modbus TCP / LonWorks.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Controladores Sauter modu521 y sensores de ductos de alta sensibilidad.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Mitigación precisa del desperdicio de aire de suministro en laboratorios y salas de servidores de alta confiabilidad.</p>
+          <p><strong>Soporte Técnico Local:</strong> Ingeniería especializada y soporte de calibración presencial en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Soluciones de control especializado para cuartos de servidores desde $ 82.000.000 COP.</p>
+        `,
+        },
+        {
+          id: 17,
+          title: "Carrier / BluEdge",
+          category: "internacionales",
+          tag: "Planta de Agua Fría",
+          description:
+            "Optimización de chillers por agua y control dinámico con mantenimiento predictivo en nube BluEdge.",
+          connectivity: "BACnet IP / Cloud Connect",
+          price: "Desde $ 135.000.000 COP",
+          support: "Carrier Colombia",
+          specs: `
+          <p><strong>Clasificación:</strong> Suministro y Automatización de Unidades Centrales Chiller y Paquetes de Aire (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Conexión nativa BACnet IP con tarjeta Carrier CCN.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Compresores de tornillo y centrífugos optimizados por variador.</p>
+          <p><strong>Ahorro Energético Medido:</strong> 18% a 22% de mejora de eficiencia de la planta térmica al usar setpoint dinámico por temperatura exterior.</p>
+          <p><strong>Soporte Técnico Local:</strong> Carrier Colombia en la zona industrial de Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Soluciones de modernización de automatización de planta desde $ 135.000.000 COP.</p>
+        `,
+        },
+        {
+          id: 18,
+          title: "Daikin / VRV Cloud",
+          category: "internacionales",
+          tag: "Refrigerante Variable",
+          description:
+            "Sistemas VRV con control centralizado inteligente en nube y balance de setpoints automatizado.",
+          connectivity: "Modbus / Daikin DIII-Net",
+          price: "Desde $ 98.000.000 COP",
+          support: "Daikin Colombia",
+          specs: `
+          <p><strong>Clasificación:</strong> Climatización de Expansión Directa y Volumen de Refrigerante Variable (VRV) (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Integración propietaria Daikin DIII-Net adaptada a Modbus o BACnet.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Condensadoras e hidromódulos de climatización inteligente VRV.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Hasta un 30% de ahorro energético en comparación con sistemas divididos tradicionales sin control variable.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede Daikin en Bogotá para entrenamiento e ingeniería de proyectos.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Suministro de controladores centrales inteligentes Intelligent Touch Manager desde $ 98.000.000 COP.</p>
+        `,
+        },
+        {
+          id: 19,
+          title: "Mitsubishi Electric",
+          category: "internacionales",
+          tag: "City Multi Controls",
+          description:
+            "Sistemas VRF City Multi integrados a control centralizado AE-200A para oficinas corporativas.",
+          connectivity: "BACnet / M-Net proprietary",
+          price: "Desde $ 112.000.000 COP",
+          support: "Soporte Autorizado",
+          specs: `
+          <p><strong>Clasificación:</strong> Sistemas VRF de Alta Eficiencia y Controladores Centralizados AE-200A (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Bus de datos M-Net propietario y pasarelas de conexión BACnet para automatización.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Unidades evaporadoras tipo cassette y termostatos inteligentes MA.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Ahorros estacionales de energía del 22% gracias a sus compresores de tecnología inverter de última generación.</p>
+          <p><strong>Soporte Técnico Local:</strong> Distribuidores oficiales calificados en Colombia.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Infraestructura de control centralizado desde $ 112.000.000 COP para edificios de oficinas de mediana escala.</p>
+        `,
+        },
+        {
+          id: 20,
+          title: "Johnson Controls (Metasys)",
+          category: "internacionales",
+          tag: "Supervisión Abierta",
+          description:
+            "Arquitectura e infraestructura global para la supervisión y automatización de sistemas HVAC industriales.",
+          connectivity: "BACnet MSTP / BACnet IP",
+          price: "Desde $ 155.000.000 COP",
+          support: "Johnson Controls",
+          specs: `
+          <p><strong>Clasificación:</strong> Sistema de Gestión de Edificios (BMS) Metasys para Grandes Superficies (Internacional).</p>
+          <p><strong>Ruta de Comunicación de Red:</strong> Protocolo robusto BACnet IP de alta velocidad y buses MSTP para controladores de campo.</p>
+          <p><strong>Hardware de Campo Asociado:</strong> Motores de red Metasys SNE y controladores lógicos programables de la serie CGM.</p>
+          <p><strong>Ahorro Energético Medido:</strong> Automatización total de la planta térmica que entrega de 20% a 25% de ahorro verificado.</p>
+          <p><strong>Soporte Técnico Local:</strong> Sede directa corporativa Johnson Controls Colombia en Bogotá.</p>
+          <p><strong>Estructura de Costo Estándar:</strong> Licenciamiento e ingeniería de supervisores de red desde $ 155.000.000 COP.</p>
+        `,
+        },
+      ];
+
+      // Renderizar dinámicamente los 20 proveedores en la interfaz para evitar lagunas y soportar filtros
+      function renderProviders() {
+        const grid = document.getElementById("providers-grid");
+        const comp1 = document.getElementById("compare-p1");
+        const comp2 = document.getElementById("compare-p2");
+
+        grid.innerHTML = "";
+        comp1.innerHTML = "";
+        comp2.innerHTML = "";
+
+        allProviders.forEach((prov) => {
+          const isNacional = prov.category === "nacionales";
+          const badgeColor = isNacional
+            ? "bg-aecsa-green/20 text-aecsa-navy"
+            : "bg-aecsa-navy text-aecsa-green";
+          const catLabel = isNacional
+            ? "Integrador Nacional"
+            : "Marca Internacional";
+
+          const cardHtml = `
+          <div class="provider-card bg-aecsa-grayAlt border border-aecsa-border rounded-2xl p-6 hover:border-aecsa-green hover:shadow-sm transition-all flex flex-col justify-between" data-category="${prov.category}">
+            <div>
+              <div class="flex justify-between items-start mb-3">
+                <span class="${badgeColor} text-[9px] font-bold px-2 py-0.5 rounded uppercase">${prov.tag}</span>
+                <span class="text-aecsa-grayMuted text-xs font-semibold">${catLabel}</span>
+              </div>
+              <h3 class="font-extrabold text-aecsa-navy text-lg">${prov.title}</h3>
+              <p class="text-xs text-aecsa-grayMuted mt-1 mb-4 leading-relaxed">${prov.description}</p>
+              
+              <div class="space-y-2 text-xs border-t border-aecsa-border pt-3">
+                <div class="flex justify-between">
+                  <span class="text-aecsa-grayMuted">Conectividad:</span>
+                  <span class="font-bold text-aecsa-navy">${prov.connectivity}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-aecsa-grayMuted">Costo Estimado:</span>
+                  <span class="font-extrabold text-aecsa-greenDark">${prov.price}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-aecsa-grayMuted">Soporte Local:</span>
+                  <span class="font-bold text-aecsa-navy">${prov.support}</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-5 pt-4 border-t border-aecsa-border">
+              <button onclick="openSpecModal(${prov.id})" class="w-full text-center bg-white hover:bg-aecsa-navy hover:text-white text-aecsa-navy text-xs font-bold py-2.5 rounded-xl border border-aecsa-border hover:border-aecsa-navy transition-all">Ver Ficha Técnica</button>
+            </div>
+          </div>
+        `;
+          grid.innerHTML += cardHtml;
+
+          // Renderizar opciones en el comparador IA
+          const opt1 = document.createElement("option");
+          opt1.value = prov.id;
+          opt1.textContent = prov.title;
+          if (prov.id === 1) opt1.selected = true; // Oclima por defecto
+          comp1.appendChild(opt1);
+
+          const opt2 = document.createElement("option");
+          opt2.value = prov.id;
+          opt2.textContent = prov.title;
+          if (prov.id === 3) opt2.selected = true; // Quantum T&S por defecto
+          comp2.appendChild(opt2);
+        });
+      }
+
+      // Cambiar de Pestaña (Tabs)
+      function switchTab(tabId) {
+        // Ocultar contenidos
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.add("hidden");
+        });
+        // Desactivar botones de navegación
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.classList.remove("bg-aecsa-navy", "text-white", "shadow");
+          btn.classList.add(
+            "text-aecsa-navy",
+            "hover:bg-white",
+            "hover:shadow-sm",
+          );
+        });
+
+        // Mostrar pestaña activa
+        document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+
+        // Activar botón de pestaña activa
+        const activeBtn = document.getElementById(`btn-${tabId}`);
+        activeBtn.classList.add("bg-aecsa-navy", "text-white", "shadow");
+        activeBtn.classList.remove(
+          "text-aecsa-navy",
+          "hover:bg-white",
+          "hover:shadow-sm",
+        );
+
+        // Inicialización perezosa (lazy) de los gráficos respectivos de cada pestaña
+        if (tabId === "dashboard") {
+          initDashboardCharts();
+        } else if (tabId === "sustainability") {
+          initSustainabilityCharts();
+        } else if (tabId === "science") {
+          initFangerCharts();
+        }
+      }
+
+      // Inicializar Gráficos del Dashboard Ejecutivo
+      function initDashboardCharts() {
+        const ctx = document
+          .getElementById("chartRetornoAECSA")
+          .getContext("2d");
+        if (chartRetornoInstance) {
+          chartRetornoInstance.destroy();
+        }
+        chartRetornoInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [
+              "Mes 0",
+              "Mes 6",
+              "Mes 12",
+              "Mes 18",
+              "Mes 24",
+              "Mes 30",
+              "Mes 36",
+            ],
+            datasets: [
+              {
+                label:
+                  "Flujo de Caja Neto de Climatización IoT (Inversión Recuperada)",
+                data: [-390, 160, 710, 1260, 1810, 2360, 2910], // Valores representados en Millones de COP
+                borderColor: "#A4BE00",
+                backgroundColor: "rgba(192, 221, 23, 0.1)",
+                borderWidth: 3,
+                tension: 0.2,
+                fill: true,
+                pointBackgroundColor: "#012030",
+                pointBorderColor: "#C0DD17",
+                pointHoverRadius: 6,
+              },
+              {
+                label: "Costo de Operación Climatización Tradicional (Sin IoT)",
+                data: [0, -1100, -2200, -3300, -4400, -5500, -6600],
+                borderColor: "#F05C05",
+                borderDash: [5, 5],
+                borderWidth: 2,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  boxWidth: 12,
+                  font: { size: 10, family: "Jost" },
+                  color: "#012030",
+                },
+              },
+            },
+            scales: {
+              y: {
+                ticks: {
+                  callback: function (value) {
+                    return "$ " + value + "M";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Inicializar Gráfico de Benchmarking - Corregido con AECSA Actual a 39.4 kWh
+      function initSustainabilityCharts() {
+        const ctx = document
+          .getElementById("chartBenchmarkBPO")
+          .getContext("2d");
+        if (chartBenchmarkInstance) {
+          chartBenchmarkInstance.destroy();
+        }
+        chartBenchmarkInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: [
+              "BPO Tradicional",
+              "AECSA S.A.S. (Actual)",
+              "Meta Confort IoT",
+            ],
+            datasets: [
+              {
+                label: "Consumo Energético por Climatización (kWh/m²/mes)",
+                data: [42.0, 39.4, 30.7],
+                backgroundColor: [
+                  "rgba(240, 92, 5, 0.8)", // Terracota / Naranja
+                  "rgba(1, 32, 48, 0.8)", // Navy
+                  "rgba(192, 221, 23, 0.8)", // Verde Primavera
+                ],
+                borderColor: ["#F05C05", "#012030", "#C0DD17"],
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return value.toFixed(1) + " kWh";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Inicializar Gráfico Curva Fanger PMV vs PPD
+      function initFangerCharts() {
+        const ctx = document
+          .getElementById("chartFangerCurve")
+          .getContext("2d");
+        if (chartFangerInstance) {
+          chartFangerInstance.destroy();
+        }
+
+        const labels = [];
+        const dataPoints = [];
+        for (let pmv = -3; pmv <= 3; pmv += 0.25) {
+          labels.push(pmv.toFixed(2));
+          const ppd =
+            100 -
+            95 *
+              Math.exp(-0.03353 * Math.pow(pmv, 4) - 0.2179 * Math.pow(pmv, 2));
+          dataPoints.push(ppd);
+        }
+
+        chartFangerInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Porcentaje de Personas Insatisfechas (PPD %)",
+                data: dataPoints,
+                borderColor: "#F05C05",
+                backgroundColor: "rgba(240, 92, 5, 0.05)",
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Voto Medio Previsto de Confort (PMV)",
+                  font: { size: 10, family: "Jost" },
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Personas Insatisfechas (PPD %)",
+                  font: { size: 10, family: "Jost" },
+                },
+                min: 0,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+
+      // Simular el Modelo PMV/PPD de Fanger
+      function updateFangerSimulation() {
+        const temp = parseFloat(document.getElementById("simTemp").value);
+        const hum = parseFloat(document.getElementById("simHum").value);
+
+        document.getElementById("valSimTemp").innerText =
+          temp.toFixed(1) + "°C";
+        document.getElementById("valSimHum").innerText = hum + "%";
+
+        // Aproximación de confort térmico para oficina de alta densidad
+        const idealTemp = 22.5;
+        let pmv = (temp - idealTemp) * 0.35;
+
+        if (hum > 60) {
+          pmv += (hum - 60) * 0.01;
+        } else if (hum < 30) {
+          pmv -= (30 - hum) * 0.01;
+        }
+
+        pmv = Math.max(-3, Math.min(3, pmv));
+        const ppd =
+          100 -
+          95 *
+            Math.exp(-0.03353 * Math.pow(pmv, 4) - 0.2179 * Math.pow(pmv, 2));
+
+        let desc = "";
+        let colorClass = "text-aecsa-greenDark";
+        if (pmv > 1.5) {
+          desc = "Muy Caliente";
+          colorClass = "text-red-600";
+        } else if (pmv > 0.5) {
+          desc = "Ligeramente Cálido";
+          colorClass = "text-aecsa-orange";
+        } else if (pmv >= -0.5 && pmv <= 0.5) {
+          desc = "Neutral (Confort Óptimo)";
+          colorClass = "text-aecsa-greenDark";
+        } else if (pmv >= -1.5) {
+          desc = "Ligeramente Fresco";
+          colorClass = "text-blue-500";
+        } else {
+          desc = "Frío";
+          colorClass = "text-blue-700";
+        }
+
+        const resPmv = document.getElementById("resPmv");
+        resPmv.innerText = `${pmv.toFixed(2)} (${desc})`;
+        resPmv.className = `font-bold ${colorClass}`;
+        document.getElementById("resPpd").innerText = ppd.toFixed(1) + "%";
+      }
+
+      // Funciones de la Calculadora de ROI y Descuento de Impuestos
+      function calculateROI() {
+        const area = parseFloat(document.getElementById("sliderArea").value);
+        const costoEnergiaMensual = parseFloat(
+          document.getElementById("sliderCostoEnergia").value,
+        );
+        const tarifaKwh = parseFloat(
+          document.getElementById("sliderTarifaKwh").value,
+        );
+        const puestos = parseFloat(
+          document.getElementById("sliderPuestos").value,
+        );
+
+        document.getElementById("lblArea").innerText =
+          formatCOP(area, false) + " m²";
+        document.getElementById("lblCostoEnergia").innerText = formatCOP(
+          costoEnergiaMensual,
+          true,
+        );
+        document.getElementById("lblTarifaKwh").innerText = formatCOP(
+          tarifaKwh,
+          true,
+        );
+        document.getElementById("lblPuestos").innerText =
+          formatCOP(puestos, false) + " Puestos";
+
+        // CAPEX Bruto de adquisición e instalación de hardware IoT ($ 110.300 COP / m²)
+        const capexBruto = area * 110300;
+
+        // Incentivos tributarios en Colombia (Ley 1715 de 2014)
+        const exclusionIva = capexBruto * 0.19;
+        const deduccionRenta = capexBruto * 0.5 * 0.35; // Deducción del 50% de la inversión calculada sobre la tasa corporativa de renta del 35%
+        const capexNeto = capexBruto - exclusionIva - deduccionRenta;
+
+        // Ahorros Anuales Proyectados
+        const ahorroEnergiaAnual = costoEnergiaMensual * 12 * 0.22; // 22% de ahorro energético medido
+        const ahorroProductividadAnual = puestos * 576000; // $ 576.000 COP anuales de retorno operativo por puesto
+        const ahorroTotalAnual = ahorroEnergiaAnual + ahorroProductividadAnual;
+
+        // Payback Period (Meses de recuperación)
+        const paybackEnergia = capexNeto / (ahorroEnergiaAnual / 12);
+        const paybackCombinado = capexNeto / (ahorroTotalAnual / 12);
+
+        // Carbono Evitado Anual (Factor de Emisión SIN de Colombia: 0.126 kg CO2e / kWh)
+        const kwhMensualesHVAC = costoEnergiaMensual / tarifaKwh;
+        const kwhAhorradosAnual = kwhMensualesHVAC * 12 * 0.22;
+        const co2EvitadoAnual = (kwhAhorradosAnual * 0.126) / 1000;
+
+        // Actualizar Interfaz Gráfica
+        document.getElementById("outCapexBruto").innerText = formatCOP(
+          capexBruto,
+          true,
+        );
+        document.getElementById("outExclusionIva").innerText =
+          "-" + formatCOP(exclusionIva, true);
+        document.getElementById("outDeduccionRenta").innerText =
+          "-" + formatCOP(deduccionRenta, true);
+        document.getElementById("outCapexNeto").innerText = formatCOP(
+          capexNeto,
+          true,
+        );
+
+        document.getElementById("outAhorroEnergia").innerText = formatCOP(
+          ahorroEnergiaAnual,
+          true,
+        );
+        document.getElementById("outAhorroProductividad").innerText = formatCOP(
+          ahorroProductividadAnual,
+          true,
+        );
+        document.getElementById("outAhorroTotal").innerText = formatCOP(
+          ahorroTotalAnual,
+          true,
+        );
+
+        document.getElementById("outCo2Evitado").innerText =
+          co2EvitadoAnual.toFixed(1) + " Toneladas CO₂e / Año";
+        document.getElementById("outPaybackEnergia").innerText =
+          paybackEnergia.toFixed(1) + " Meses";
+        document.getElementById("outPaybackCombinado").innerText =
+          paybackCombinado.toFixed(1) + " Meses";
+      }
+
+      // Cargar Preestablecido (Preset) de la Sede Américas de AECSA
+      function resetToAecsaPreset() {
+        document.getElementById("sliderArea").value = 5574; // Sede Américas Bogotá
+        document.getElementById("sliderCostoEnergia").value = 183600000;
+        document.getElementById("sliderTarifaKwh").value = 1050;
+        document.getElementById("sliderPuestos").value = 1500;
+        calculateROI();
+      }
+
+      // Formatear Moneda COP
+      function formatCOP(valor, incluirSimbolo = true) {
+        const formateado = Math.round(valor).toLocaleString("es-CO");
+        return incluirSimbolo ? `$ ${formateado} COP` : formateado;
+      }
+
+      // Filtrar Tarjetas de Proveedores Dinámicamente
+      function filterProviders(categoria) {
+        document.querySelectorAll(".filter-btn").forEach((btn) => {
+          btn.classList.remove("bg-aecsa-navy", "text-white");
+          btn.classList.add(
+            "bg-aecsa-grayAlt",
+            "text-aecsa-navy",
+            "hover:bg-white",
+          );
+        });
+
+        document
+          .getElementById(`btn-filtro-${categoria}`)
+          .classList.add("bg-aecsa-navy", "text-white");
+        document
+          .getElementById(`btn-filtro-${categoria}`)
+          .classList.remove(
+            "bg-aecsa-grayAlt",
+            "text-aecsa-navy",
+            "hover:bg-white",
+          );
+
+        document.querySelectorAll(".provider-card").forEach((card) => {
+          if (
+            categoria === "todos" ||
+            card.getAttribute("data-category") === categoria
+          ) {
+            card.classList.remove("hidden");
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+      }
+
+      // Abrir Modal de Ficha Técnica
+      function openSpecModal(id) {
+        const prov = allProviders.find((p) => p.id === id);
+        if (prov) {
+          document.getElementById("modalTitle").innerText = prov.title;
+          document.getElementById("modalContent").innerHTML = prov.specs;
+          document.getElementById("spec-modal").classList.remove("hidden");
+        }
+      }
+
+      // Cerrar Modal
+      function closeSpecModal() {
+        document.getElementById("spec-modal").classList.add("hidden");
+      }
+
+      // Cerrar Modal de Reportes IA
+      function closeAIReportModal() {
+        document.getElementById("ai-report-modal").classList.add("hidden");
+      }
+
+      // Función centralizada para llamar al Worker de Cloudflare
+      async function callGeminiAPI(systemPrompt, userQuery) {
+        // Reemplaza esto con la URL que te dé Cloudflare para tu Worker
+        const workerUrl =
+          "https://gemini-proxy.autumn-morning-364e.workers.dev/";
+
+        // El payload sigue siendo el mismo que espera Gemini
+        const payload = {
+          // Opcional: Le decimos al Worker qué modelo usar
+          model: "gemini-3.1-flash-lite",
+          contents: [{ parts: [{ text: userQuery }] }],
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
+          },
+        };
+
+        // Implementación de reintentos
+        let delay = 1000;
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          try {
+            const response = await fetch(workerUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) return text;
+            }
+
+            if (response.status === 429 || response.status === 503) {
+              // Error de límite de tasa o sobrecarga - Reintento exponencial
+            } else {
+              throw new Error(`Código de error HTTP: ${response.status}`);
+            }
+          } catch (error) {
+            if (attempt === 5) {
+              return `No ha sido posible conectar con la Inteligencia tras varios reintentos. Detalles: ${error.message}.`;
+            }
+          }
+          await new Promise((res) => setTimeout(res, delay));
+          delay *= 2;
+        }
+        return "No se ha obtenido respuesta del modelo.";
+      }
+
+      // AI Generador de Memoria Técnica para UPME
+      async function generateAEMemory() {
+        const area = document.getElementById("sliderArea").value;
+        const costo = document.getElementById("sliderCostoEnergia").value;
+        const tarifa = document.getElementById("sliderTarifaKwh").value;
+        const puestos = document.getElementById("sliderPuestos").value;
+
+        const systemPrompt =
+          "Actúas como un Ingeniero Consultor Senior experto en Eficiencia Energética en Colombia y en la Ley 1715 de 2014. Redactas memorias técnicas formales de justificación para radicar proyectos ante la UPME.";
+        const query = `Genera una justificación técnica formal de radicación de incentivos fiscales (Ley 1715 de 2014) en formato estructurado de capítulos en español para AECSA S.A.S. 
+      Usa los siguientes parámetros de la Sede Américas en Bogotá:
+      - Área total climatizada: ${area} m²
+      - Intensidad de consumo energético inicial auditada por informe de sostenibilidad: 39.4 kWh/m²/mes
+      - Gasto mensual de energía actual de aire acondicionado: ${costo} COP
+      - Tarifa de energía comercial de Bogotá: $${tarifa} COP / kWh
+      - Ocupación simultánea promedio: ${puestos} puestos de trabajo.
+
+      Explica en detalle cómo la sensorización inteligente IoT inalámbrica de CO2, temperatura y humedad, acoplada a compuertas de volumen de aire motorizadas y un sistema de control centralizado, logrará reducir un 22% del consumo energético de climatización, reduciendo la intensidad energética total del edificio de 39.4 kWh/m²/mes a 30.7 kWh/m²/mes. Describe la aplicabilidad de los beneficios impositivos (Exclusión de IVA del 19% y Deducción del Impuesto de Renta del 50% de la inversión). Mantén un tono sumamente ejecutivo, técnico, limpio y adaptado al español de Colombia. Evita caracteres extraños de codificación.`;
+
+        // Mostrar modal de carga
+        document.getElementById("aiReportTitle").innerText =
+          "Modelando Justificación Técnica para UPME...";
+        document.getElementById("aiReportContent").innerHTML =
+          "<div class='text-center py-8'><span class='animate-pulse text-indigo-700 font-bold'>🧠 Analizando parámetros del proyecto y redactando informe UPME con Gemini...</span></div>";
+        document.getElementById("ai-report-modal").classList.remove("hidden");
+
+        const responseText = await callGeminiAPI(systemPrompt, query);
+        document.getElementById("aiReportTitle").innerText =
+          "📄 Justificación Técnica Formal - Radicación UPME";
+        document.getElementById("aiReportContent").innerText = responseText;
+      }
+
+      // AI Comparador de Proveedores
+      async function compareSuppliersWithAI() {
+        const p1Index = document.getElementById("compare-p1").value;
+        const p2Index = document.getElementById("compare-p2").value;
+
+        const p1 = allProviders.find((p) => p.id == p1Index);
+        const p2 = allProviders.find((p) => p.id == p2Index);
+
+        if (!p1 || !p2) return;
+
+        const systemPrompt =
+          "Actúas como el Director de Compras y Sostenibilidad de AECSA S.A.S., un especialista analítico y de negocios encargado de evaluar tecnologías limpias para centros de llamadas en Bogotá.";
+        const query = `Realiza un análisis comparativo estratégico y ejecutivo (imparcial pero sumamente crítico) para la junta de socios de AECSA S.A.S. entre estos dos proponentes de climatización inteligente para la Sede Américas que posee un consumo base real de 39.4 kWh/m²/mes:
+
+      PROVEEDOR A: ${p1.title}
+      Especificaciones: ${p1.specs.replace(/<[^>]*>/g, "")}
+
+      PROVEEDOR B: ${p2.title}
+      Especificaciones: ${p2.specs.replace(/<[^>]*>/g, "")}
+
+      Compara en base a:
+      1. Compatibilidad técnica y de integración (Niagara Framework, BACnet, Modbus).
+      2. Facilidad de instalación (Inalámbrica vs. cableada en un Call Center activo de alta densidad).
+      3. Soporte en la postulación tributaria de Ley 1715 ante UPME/ANLA.
+      4. Costo beneficio (Precios de referencia en pesos colombianos).
+      5. Recomendación explícita de compra para la Sede Américas de AECSA.
+
+      Escribe de forma estructurada, profesional, crítica y ejecutiva.`;
+
+        // Mostrar modal de carga
+        document.getElementById("aiReportTitle").innerText =
+          "Analizando Sinergias de Proveedores...";
+        document.getElementById("aiReportContent").innerHTML =
+          "<div class='text-center py-8'><span class='animate-pulse text-indigo-700 font-bold'>🧠 Procesando fichas técnicas y comparando proponentes con Gemini...</span></div>";
+        document.getElementById("ai-report-modal").classList.remove("hidden");
+
+        const responseText = await callGeminiAPI(systemPrompt, query);
+        document.getElementById("aiReportTitle").innerText =
+          `⚖️ Comparativa IA: ${p1.title} vs ${p2.title}`;
+        document.getElementById("aiReportContent").innerText = responseText;
+      }
+
+      // Chatbot Conversacional IA
+      async function sendMessageToAI() {
+        const inputEl = document.getElementById("ai-user-query");
+        const userText = inputEl.value.trim();
+        if (!userText) return;
+
+        // Renderizar mensaje del usuario en el log
+        const logEl = document.getElementById("ai-chat-log");
+        logEl.innerHTML += `
+        <div class="flex items-start gap-2 max-w-[85%] self-end justify-end ml-auto text-right">
+          <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-sm leading-relaxed">
+            ${userText}
+          </div>
+          <span class="text-xl bg-slate-100 p-1.5 rounded-lg">👤</span>
+        </div>
+      `;
+        inputEl.value = "";
+        logEl.scrollTop = logEl.scrollHeight;
+
+        // Inyectar loading de la IA
+        const loadingId = "ai-loading-placeholder";
+        logEl.innerHTML += `
+        <div id="${loadingId}" class="flex items-start gap-2 max-w-[85%]">
+          <span class="text-xl bg-indigo-100 p-1.5 rounded-lg">🤖</span>
+          <div class="bg-white p-3 rounded-2xl border border-slate-200 text-slate-400 leading-relaxed shadow-sm italic">
+            Gemini está redactando su respuesta...
+          </div>
+        </div>
+      `;
+        logEl.scrollTop = logEl.scrollHeight;
+
+        const systemPrompt = `Eres el asesor y consultor de Climatización Inteligente y Sostenibilidad de AECSA S.A.S. Tienes total conocimiento del proyecto de confort térmico de la Sede Américas de Bogotá (5.574,18 m², 1.500 puestos de trabajo, $183.6M COP de gasto de energía mensual para climatización). 
+      El consumo real actual del edificio auditado en el informe de sostenibilidad de 2025 es de 39.4 kWh/m²/mes (el cual se busca reducir a 30.7 kWh/m²/mes).
+      Entiendes la Ley 1715 de 2014 de Colombia, el modelo PMV/PPD de Fanger, y el Informe de Sostenibilidad 2025 de AECSA (donde compensan 280 toneladas de CO₂ al año en el bosque de Vaupés en alianza con Saving the Amazon y en Villa de Leyva). 
+      Responde de manera técnica, profesional, ejecutiva y usando pesos colombianos ($ COP) para resolver dudas de la junta de socios.`;
+
+        const aiResponse = await callGeminiAPI(systemPrompt, userText);
+
+        // Remover placeholder de carga e inyectar respuesta real
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        logEl.innerHTML += `
+        <div class="flex items-start gap-2 max-w-[85%]">
+          <span class="text-xl bg-indigo-100 p-1.5 rounded-lg">🤖</span>
+          <div class="bg-white p-3 rounded-2xl border border-slate-200 text-slate-700 leading-relaxed shadow-sm">
+            ${aiResponse}
+          </div>
+        </div>
+      `;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function handleChatKey(event) {
+        if (event.key === "Enter") {
+          sendMessageToAI();
+        }
+      }
+
+      function askPreset(question) {
+        switchTab("ai");
+        document.getElementById("ai-user-query").value = question;
+        sendMessageToAI();
+      }
+
+      // Inicializaciones al Cargar la Página
+      window.onload = function () {
+        // Renderizar el catálogo de 20 proveedores
+        renderProviders();
+
+        // Cargar preset de AECSA S.A.S. de Bogotá por defecto
+        resetToAecsaPreset();
+
+        // Iniciar los gráficos de la primera pestaña activa
+        initDashboardCharts();
+      };
+    </script>
+    <!-- Lógica chatbot -->
+    <script>
+      (function () {
+        // ============ CONFIGURACIÓN ============
+        // ¡Ya no necesitas la GEMINI_API_KEY en el frontend!
+        const WORKER_URL =
+          "https://gemini-proxy.autumn-morning-364e.workers.dev/";
+        const GEMINI_MODELS = ["gemini-3.1-flash-lite"];
+
+        // Selector del contenido que quieres usar como contexto.
+        const SELECTOR_CONTENIDO = "body";
+
+        // ============ EXTRACCIÓN DE CONTEXTO DE LA LANDING ============
+        function extraerContenidoPagina() {
+          const root =
+            document.querySelector(SELECTOR_CONTENIDO) || document.body;
+          const clone = root.cloneNode(true);
+          // Quita el propio widget del contexto para no auto-referenciarse
+          clone
+            .querySelectorAll(
+              "#chat-widget-btn, #chat-widget-panel, script, style, noscript",
+            )
+            .forEach((el) => el.remove());
+          let texto = clone.innerText || clone.textContent || "";
+          texto = texto
+            .replace(/\n{2,}/g, "\n")
+            .replace(/[ \t]{2,}/g, " ")
+            .trim();
+          // Límite de seguridad para no mandar un contexto gigante
+          const LIMITE = 12000;
+          return texto.length > LIMITE ? texto.slice(0, LIMITE) : texto;
+        }
+
+        const contextoPagina = extraerContenidoPagina();
+
+        const systemInstruction =
+          "Eres el asistente virtual de esta página web. Responde ÚNICAMENTE con base " +
+          "en el siguiente contenido de la página. Si la pregunta no se puede responder " +
+          "con esa información, dilo honestamente y sugiere contactar directamente. " +
+          "Responde en español, de forma breve y clara.\n\n" +
+          "--- CONTENIDO DE LA PÁGINA ---\n" +
+          contextoPagina;
+
+        // ============ ESTADO DE CONVERSACIÓN ============
+        let historial = []; // [{role: "user"|"model", parts:[{text}]}]
+
+        // ============ ELEMENTOS ============
+        const btn = document.getElementById("chat-widget-btn");
+        const panel = document.getElementById("chat-widget-panel");
+        const closeBtn = document.getElementById("chat-widget-close");
+        const messagesEl = document.getElementById("chat-widget-messages");
+        const form = document.getElementById("chat-widget-form");
+        const input = document.getElementById("chat-widget-input");
+        const sendBtn = document.getElementById("chat-widget-send");
+
+        function toggle(open) {
+          panel.classList.toggle("open", open);
+          if (open) input.focus();
+        }
+        btn.addEventListener("click", () =>
+          toggle(!panel.classList.contains("open")),
+        );
+        closeBtn.addEventListener("click", () => toggle(false));
+
+        function agregarMensaje(texto, tipo) {
+          const div = document.createElement("div");
+          div.className = "chat-msg " + tipo;
+          div.textContent = texto;
+          messagesEl.appendChild(div);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          return div;
+        }
+
+        // Mensaje de bienvenida
+        agregarMensaje(
+          "¡Hola! Puedo responder tus preguntas sobre esta página. ¿En qué te ayudo?",
+          "bot",
+        );
+
+        function esperar(ms) {
+          return new Promise((r) => setTimeout(r, ms));
+        }
+
+        async function llamarModelo(modelo, body) {
+          // Le inyectamos la propiedad 'model' al body para que el Worker sepa a dónde enrutar
+          body.model = modelo;
+
+          const resp = await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          if (!resp.ok) {
+            const errText = await resp.text();
+            const err = new Error(
+              "Error del Worker/API: " + resp.status + " " + errText,
+            );
+            err.status = resp.status;
+            throw err;
+          }
+          return resp.json();
+        }
+
+        // Reintenta con backoff exponencial (para 503 de alta demanda) y,
+        // si un modelo sigue fallando, pasa al siguiente de GEMINI_MODELS.
+        async function llamarConReintentos(body) {
+          const REINTENTOS_POR_MODELO = 1; // pocos reintentos: si un modelo está saturado, mejor pasar rápido al siguiente
+          const ESPERA_BASE_MS = 1000;
+
+          for (const modelo of GEMINI_MODELS) {
+            for (let intento = 0; intento <= REINTENTOS_POR_MODELO; intento++) {
+              try {
+                return await llamarModelo(modelo, body);
+              } catch (err) {
+                const esSaturacionOModeloNoDisponible =
+                  err.status === 503 ||
+                  err.status === 429 ||
+                  err.status === 404;
+                const quedanIntentos = intento < REINTENTOS_POR_MODELO;
+                if (
+                  err.status !== 404 &&
+                  esSaturacionOModeloNoDisponible &&
+                  quedanIntentos
+                ) {
+                  await esperar(ESPERA_BASE_MS * Math.pow(2, intento));
+                  continue;
+                }
+                if (esSaturacionOModeloNoDisponible) break; // pasa al siguiente modelo de la lista
+                throw err; // error distinto a saturación: no tiene sentido reintentar
+              }
+            }
+          }
+          throw new Error(
+            "Todos los modelos están saturados por alta demanda.",
+          );
+        }
+
+        async function preguntarGemini(pregunta) {
+          historial.push({ role: "user", parts: [{ text: pregunta }] });
+
+          const body = {
+            system_instruction: { parts: [{ text: systemInstruction }] },
+            contents: historial,
+            generationConfig: { temperature: 0.3, maxOutputTokens: 500 },
+          };
+
+          const data = await llamarConReintentos(body);
+          const respuesta =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "No obtuve una respuesta clara, ¿puedes reformular tu pregunta?";
+
+          historial.push({ role: "model", parts: [{ text: respuesta }] });
+          return respuesta;
+        }
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const pregunta = input.value.trim();
+          if (!pregunta) return;
+
+          agregarMensaje(pregunta, "user");
+          input.value = "";
+          sendBtn.disabled = true;
+
+          const typingEl = agregarMensaje("Escribiendo...", "typing");
+
+          try {
+            const respuesta = await preguntarGemini(pregunta);
+            typingEl.remove();
+            agregarMensaje(respuesta, "bot");
+          } catch (err) {
+            typingEl.remove();
+            agregarMensaje(
+              "El asistente está teniendo mucha demanda ahora mismo. Intenta de nuevo en un momento 🙏",
+              "bot",
+            );
+            console.error(err);
+          } finally {
+            sendBtn.disabled = false;
+            input.focus();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
