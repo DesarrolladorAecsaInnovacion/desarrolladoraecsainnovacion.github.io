@@ -1,0 +1,2580 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AECSA - Canvas Estratégico de Entrenamiento</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Estilos base heredados de colors_and_type.css -->
+    <link rel="stylesheet" href="colors_and_type.css" />
+
+    <style>
+      :root {
+        --aecsa-green: #c0dd17;
+        --aecsa-navy: #012030;
+        --aecsa-snow: #ffffff;
+        --aecsa-orange: #f05c05;
+
+        --aecsa-green-700: #a4be00;
+        --aecsa-green-300: #d2eb52;
+        --aecsa-green-200: #e5f889;
+
+        --aecsa-blue-900: #012030;
+        --aecsa-blue-700: #126788;
+        --aecsa-teal-500: #47c2ae;
+        --aecsa-mint-300: #98e9a0;
+
+        --color-bg-alt: #f4f5f6;
+        --color-fg-muted: #6b7886;
+        --color-border: #e3e7eb;
+
+        --font-display: "Volte", "Inter", system-ui, sans-serif;
+        --font-body: "Volte", "Inter", system-ui, sans-serif;
+        --font-script: "Susa Light", "Pacifico", "Sacramento", cursive;
+      }
+
+      body {
+        font-family: var(--font-body);
+        background-color: var(--color-bg-alt);
+        color: var(--aecsa-navy);
+      }
+
+      .aecsa-eyebrow {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--aecsa-green-700);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .aecsa-eyebrow::before {
+        content: "▸";
+        color: var(--aecsa-green);
+      }
+
+      .aecsa-tagline {
+        font-family: var(--font-script);
+        font-weight: 500;
+        color: var(--aecsa-green);
+      }
+
+      /* Transiciones de pestañas */
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      .custom-shadow {
+        box-shadow: 0 4px 20px -2px rgba(1, 32, 48, 0.08);
+      }
+
+      .grid-bg {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, #e3e7eb 1px, transparent 1px),
+          linear-gradient(to bottom, #e3e7eb 1px, transparent 1px);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Estilos dinámicos para los niveles de la pirámide */
+      .pyramid-segment {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+      }
+      .pyramid-segment:hover {
+        filter: brightness(1.15) drop-shadow(0 10px 15px rgba(1, 32, 48, 0.3));
+        transform: translate(-2px, -2px);
+      }
+      .pyramid-segment.active-segment text {
+        fill: white !important;
+        stroke: #ffffff;
+        stroke-width: 1px;
+      }
+      #g-pyr-1.pyramid-segment.active-segment text {
+        fill: #012030 !important;
+        stroke: #012030 !important;
+        stroke-width: 0px !important;
+      }
+      #g-pyr-4.pyramid-segment text,
+      #g-pyr-4.pyramid-segment.active-segment text {
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col antialiased">
+    <!-- Header Principal -->
+    <header
+      class="bg-[#012030] text-white py-6 px-4 md:px-8 shadow-md border-b-4 border-[#C0DD17]"
+    >
+      <div
+        class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4"
+      >
+        <div class="text-center md:text-left">
+          <div class="aecsa-eyebrow text-[#C0DD17] mb-1">
+            Estado de Innovación de AECSA
+          </div>
+          <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight">
+            Canvas de Entrenamiento Estratégico
+          </h1>
+          <p class="text-sm md:text-base text-gray-300 mt-1">
+            Transformando la capacitación de costo administrativo a
+            <span class="text-lg text-[#C0DD17]">Socio de Negocio</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-3 bg-[#126788] py-2 px-4 rounded-lg">
+          <i class="fa-solid fa-chart-line text-[#C0DD17] text-xl"></i>
+          <div class="text-xs">
+            <p class="font-bold uppercase tracking-wider text-white">
+              Métricas de Rendimiento
+            </p>
+            <p class="text-gray-200">Investigación AECSA 2026</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navegación por Pestañas -->
+    <nav
+      class="bg-white border-b border-[#E3E7EB] sticky top-0 z-50 overflow-x-auto"
+    >
+      <div class="max-w-7xl mx-auto flex whitespace-nowrap px-4">
+        <button
+          onclick="switchTab('resumen-board')"
+          id="btn-resumen-board"
+          class="tab-btn py-4 px-6 font-bold text-[#012030] border-b-2 border-transparent hover:text-[#C0DD17] transition-all flex items-center gap-2 active border-[#C0DD17]"
+        >
+          <i class="fa-solid fa-gauge-high"></i> Executive Board
+        </button>
+        <button
+          onclick="switchTab('mefe-mefi-matrix')"
+          id="btn-mefe-mefi-matrix"
+          class="tab-btn py-4 px-6 font-bold text-gray-500 border-b-2 border-transparent hover:text-[#012030] transition-all flex items-center gap-2"
+        >
+          <i class="fa-solid fa-chess-board"></i> Matriz MEFE-MEFI
+        </button>
+        <button
+          onclick="switchTab('kirkpatrick-pyramid')"
+          id="btn-kirkpatrick-pyramid"
+          class="tab-btn py-4 px-6 font-bold text-gray-500 border-b-2 border-transparent hover:text-[#012030] transition-all flex items-center gap-2"
+        >
+          <i class="fa-solid fa-layer-group"></i> Pirámide Kirkpatrick
+        </button>
+        <button
+          onclick="switchTab('calculator-studio')"
+          id="btn-calculator-studio"
+          class="tab-btn py-4 px-6 font-bold text-gray-500 border-b-2 border-transparent hover:text-[#012030] transition-all flex items-center gap-2"
+        >
+          <i class="fa-solid fa-calculator"></i> Simulador de ROI & SLAs
+        </button>
+        <button
+          onclick="switchTab('risks-compliance')"
+          id="btn-risks-compliance"
+          class="tab-btn py-4 px-6 font-bold text-gray-500 border-b-2 border-transparent hover:text-[#012030] transition-all flex items-center gap-2"
+        >
+          <i class="fa-solid fa-shield-halved"></i> Riesgos y Ley 2300
+        </button>
+        <button
+          onclick="switchTab('gamification-ai')"
+          id="btn-gamification-ai"
+          class="tab-btn py-4 px-6 font-bold text-gray-500 border-b-2 border-transparent hover:text-[#012030] transition-all flex items-center gap-2"
+        >
+          <i class="fa-solid fa-robot"></i> Innovación & IA
+        </button>
+      </div>
+    </nav>
+
+    <!-- Contenedor Principal de Contenido -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
+      <!-- PESTAÑA: EXECUTIVE BOARD -->
+      <section id="resumen-board" class="tab-content active space-y-8">
+        <div
+          class="bg-white border-l-8 border-[#F05C05] rounded-lg p-6 custom-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+        >
+          <div class="space-y-2">
+            <span class="aecsa-eyebrow text-[#F05C05]"
+              >Diagnóstico Crítico de AECSA</span
+            >
+            <h2 class="text-xl md:text-2xl font-extrabold text-[#012030]">
+              El Entrenamiento opera como costo invisible
+            </h2>
+            <p class="text-gray-600 max-w-3xl">
+              Actualmente el equipo opera sin integración entre el sistema CRM y
+              la gestión formativa, sin métricas post-capacitación y sin grupos
+              de control. Esta desconexión impide demostrar el impacto real del
+              área frente a la Alta Dirección[cite: 2].
+            </p>
+          </div>
+          <div
+            class="bg-[#F05C05]/10 text-[#F05C05] font-bold p-3 rounded-lg text-center whitespace-nowrap min-w-[150px]"
+          >
+            <i class="fa-solid fa-triangle-exclamation text-2xl mb-1"></i>
+            <p class="text-xs uppercase">Riesgo Detectado</p>
+            <p class="text-sm">Área de Desinversión</p>
+          </div>
+        </div>
+
+        <!-- Tarjetas de Impacto de Negocio -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div
+            class="bg-white border-t-4 border-[#C0DD17] rounded-lg p-6 custom-shadow relative overflow-hidden"
+          >
+            <div class="absolute right-4 top-4 text-4xl text-gray-100">
+              <i class="fa-solid fa-users-slash"></i>
+            </div>
+            <span class="aecsa-eyebrow">Retención</span>
+            <h3 class="text-3xl font-black text-[#012030] mt-2">-53%</h3>
+            <p class="text-sm text-gray-500 mt-1 font-bold">
+              Rotación Temprana
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+              Logrado mediante programas de formación estratégica y
+              acompañamiento continuo[cite: 2].
+            </p>
+          </div>
+
+          <div
+            class="bg-white border-t-4 border-[#126788] rounded-lg p-6 custom-shadow relative overflow-hidden"
+          >
+            <div class="absolute right-4 top-4 text-4xl text-gray-100">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <span class="aecsa-eyebrow text-[#126788]">Productividad</span>
+            <h3 class="text-3xl font-black text-[#012030] mt-2">+25% a 35%</h3>
+            <p class="text-sm text-gray-500 mt-1 font-bold">
+              Aumento de Eficiencia
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+              Cifras globales tras aplicar marcos estructurados y métricas de
+              aprendizaje continuo[cite: 2].
+            </p>
+          </div>
+
+          <div
+            class="bg-white border-t-4 border-[#F05C05] rounded-lg p-6 custom-shadow relative overflow-hidden"
+          >
+            <div class="absolute right-4 top-4 text-4xl text-gray-100">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <span class="aecsa-eyebrow text-[#F05C05]">Curva Inicial</span>
+            <h3 class="text-3xl font-black text-[#012030] mt-2">60 Días</h3>
+            <p class="text-sm text-gray-500 mt-1 font-bold">
+              De Cuello de Botella
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+              El retraso en el estándar operativo por asimilación sistémica
+              (AECSOFT) reduce el recaudo[cite: 2].
+            </p>
+          </div>
+
+          <div
+            class="bg-white border-t-4 border-[#47C2AE] rounded-lg p-6 custom-shadow relative overflow-hidden"
+          >
+            <div class="absolute right-4 top-4 text-4xl text-gray-100">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <span class="aecsa-eyebrow text-[#47C2AE]">Riesgo Regulatorio</span>
+            <h3 class="text-3xl font-black text-[#012030] mt-2">Mínimo</h3>
+            <p class="text-sm text-gray-500 mt-1 font-bold">
+              Blindaje Normativo
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+              Garantía total de cumplimiento de la Ley 2300 de 2023 ("Dejen de
+              fregar") mediante re-entrenamiento[cite: 2].
+            </p>
+          </div>
+        </div>
+
+        <!-- El Giro de 180°: Propuesta de Socio de Negocio -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div
+            class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-4"
+          >
+            <h3
+              class="text-xl font-bold text-[#012030] border-b pb-2 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-arrow-right-arrow-left text-[#C0DD17]"></i>
+              El Cambio de Enfoque Requerido
+            </h3>
+            <div class="space-y-4">
+              <div
+                class="flex items-start gap-4 p-3 bg-red-50 rounded-lg border-l-4 border-red-500"
+              >
+                <div class="text-red-500 text-lg mt-1">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-[#012030]">
+                    Antes: Proceso Administrativo
+                  </h4>
+                  <p class="text-xs text-gray-600">
+                    Enfoque puramente regulatorio y de completitud de cursos,
+                    ignorando el resultado operativo o el impacto financiero en
+                    el recaudo real[cite: 2].
+                  </p>
+                </div>
+              </div>
+              <div
+                class="flex items-start gap-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-500"
+              >
+                <div class="text-green-500 text-lg mt-1">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-[#012030] text-green-800">
+                    Ahora: Socio de Negocio Estratégico
+                  </h4>
+                  <p class="text-xs text-gray-600">
+                    Compartir KPIs compartidos con cartera, medir conversión de
+                    promesas de pago a recaudo y consolidar acuerdos formales de
+                    servicio (SLAs)[cite: 2].
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-[#012030] text-white rounded-lg p-6 custom-shadow flex flex-col justify-between"
+          >
+            <div class="space-y-3">
+              <span class="aecsa-eyebrow text-[#C0DD17]"
+                >Justificación Económica</span
+              >
+              <h3 class="text-xl font-bold">
+                ¿Cómo impacta el entrenamiento a la Cartera?
+              </h3>
+              <p class="text-sm text-gray-300 leading-relaxed">
+                La cobranza es comunicación persuasiva bajo presión[cite: 2]. Si
+                un entrenador entrega técnicas conductuales avanzadas y el
+                asesor las aplica, la conversión de promesas de pago a recaudo
+                real aumenta exponencialmente[cite: 2].
+              </p>
+              <p class="text-sm text-gray-300 leading-relaxed">
+                Un solo punto porcentual de mejora en la tasa de recuperación de
+                cartera, atribuible directamente a una intervención formativa
+                documentada, amortiza la totalidad del presupuesto formativo
+                anual[cite: 2].
+              </p>
+            </div>
+            <div
+              class="mt-6 border-t border-gray-700 pt-4 flex justify-between items-center text-xs"
+            >
+              <span class="text-gray-400"
+                >Fuente: Investigación de Métricas AECSA[cite: 2]</span
+              >
+              <span class="text-[#C0DD17] font-bold"
+                ><i class="fa-solid fa-arrow-pointer"></i> Navega las pestañas
+                para simular</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA: MATRIZ MEFE-MEFI -->
+      <section id="mefe-mefi-matrix" class="tab-content space-y-8">
+        <div
+          class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4"
+          >
+            <div>
+              <span class="aecsa-eyebrow">Diagnóstico del Entorno</span>
+              <h2 class="text-2xl font-black text-[#012030]">
+                Matriz de Factores MEFE y MEFI
+              </h2>
+              <p class="text-sm text-gray-500">
+                Mapeo estratégico interactivo de la situación del equipo de
+                entrenamiento de AECSA, alimentado por el documento e
+                investigación[cite: 2].
+              </p>
+            </div>
+            <div
+              class="bg-[#012030] text-[#C0DD17] px-4 py-2 rounded font-bold text-sm"
+            >
+              Estado Actual:
+              <span id="matrix-quadrant" class="text-white">Calculando...</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Gráfica de Cuadrantes -->
+            <div
+              class="lg:col-span-6 flex flex-col items-center justify-center"
+            >
+              <div
+                class="relative w-full max-w-[420px] aspect-square bg-white border border-gray-300 rounded-lg grid-bg overflow-hidden p-2 flex flex-col justify-between"
+              >
+                <!-- Eje Y (MEFE) -->
+                <div
+                  class="absolute left-1 top-2 text-[10px] text-gray-500 font-bold origin-left rotate-90 translate-x-2"
+                >
+                  Factores Externos (MEFE)
+                </div>
+
+                <!-- Cuadrantes de Estrategia -->
+                <div
+                  class="absolute inset-0 grid grid-cols-3 grid-rows-3 text-[9px] pointer-events-none opacity-60 font-bold"
+                >
+                  <div
+                    class="border-b border-r border-gray-200 p-1 flex items-start justify-start text-blue-800 bg-blue-50/20"
+                  >
+                    Crecer/Construir (II)
+                  </div>
+                  <div
+                    class="border-b border-r border-gray-200 p-1 flex items-start justify-start text-blue-800 bg-blue-50/20"
+                  >
+                    Crecer/Construir (I)
+                  </div>
+                  <div
+                    class="border-b border-gray-200 p-1 flex items-start justify-start text-green-800 bg-green-50/20"
+                  >
+                    Retener/Mantener (IV)
+                  </div>
+
+                  <div
+                    class="border-b border-r border-gray-200 p-1 flex items-start justify-start text-yellow-800 bg-yellow-50/20"
+                  >
+                    Mantener/Estabilizar (V)
+                  </div>
+                  <div
+                    class="border-b border-r border-gray-200 p-1 flex items-start justify-start text-yellow-800 bg-yellow-50/20"
+                  >
+                    Cosechar/Desinvertir (III)
+                  </div>
+                  <div
+                    class="border-b border-gray-200 p-1 flex items-start justify-start text-green-800 bg-green-50/20"
+                  >
+                    Retener/Mantener (VI)
+                  </div>
+
+                  <div
+                    class="border-r border-gray-200 p-1 flex items-end justify-start text-red-800 bg-red-50/20"
+                  >
+                    Cosechar/Desinvertir (VIII)
+                  </div>
+                  <div
+                    class="border-r border-gray-200 p-1 flex items-end justify-start text-red-800 bg-red-50/20"
+                  >
+                    Cosechar/Desinvertir (IX)
+                  </div>
+                  <div
+                    class="p-1 flex items-end justify-start text-yellow-800 bg-yellow-50/20"
+                  >
+                    Mantener/Estabilizar (VII)
+                  </div>
+                </div>
+
+                <!-- Vector actual (Punto dinámico) -->
+                <div
+                  id="vector-dot"
+                  class="absolute w-6 h-6 bg-[#C0DD17] border-4 border-[#012030] rounded-full shadow-lg transition-all duration-300 ease-out z-20 flex items-center justify-center cursor-pointer"
+                  style="bottom: 25%; left: 25%"
+                >
+                  <span class="w-2 h-2 bg-white rounded-full"></span>
+                </div>
+
+                <!-- Ejes numéricos de la gráfica (1 a 4) -->
+                <div
+                  class="w-full flex justify-between px-6 text-[10px] text-gray-400 mt-auto pointer-events-none"
+                >
+                  <span>1.0 (Bajo)</span><span>2.5 (Medio)</span
+                  ><span>4.0 (Alto)</span>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500 font-bold mt-2">
+                Factores Internos (MEFI)
+              </div>
+
+              <!-- Diagnóstico Breve -->
+              <div class="mt-4 p-4 bg-[#F4F5F6] rounded-lg w-full text-center">
+                <span class="font-bold text-xs text-gray-600"
+                  >RESULTADO MATEMÁTICO:</span
+                >
+                <div class="flex justify-center gap-6 mt-1 text-sm font-black">
+                  <div>
+                    MEFI:
+                    <span id="mefi-score-display" class="text-[#012030]"
+                      >2.15</span
+                    >
+                  </div>
+                  <div>
+                    MEFE:
+                    <span id="mefe-score-display" class="text-[#012030]"
+                      >1.90</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Datos Reales (Del Documento Matriz) -->
+            <div class="lg:col-span-6 space-y-6">
+              <h3 class="font-bold text-[#012030] border-b pb-1 text-sm">
+                <i class="fa-solid fa-list-check"></i> Factores de Impacto
+                Ponderado
+              </h3>
+
+              <div class="space-y-4 max-h-[380px] overflow-y-auto pr-2">
+                <div class="p-3 bg-red-50/50 rounded border border-red-100">
+                  <span class="text-[10px] font-black uppercase text-red-700"
+                    >Debilidades Internas Críticas (MEFI)</span
+                  >
+                  <div
+                    class="mt-1 divide-y divide-red-100 text-xs text-gray-700"
+                  >
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Curvas de aprendizaje prolongadas por cambios en
+                        AECSOFT</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefi-1"
+                        >1.5 / 4.0</strong
+                      >
+                    </div>
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Capacitación despersonalizada para áreas no
+                        operativas</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefi-2"
+                        >2.0 / 4.0</strong
+                      >
+                    </div>
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Desconexión entre CRM, marcadores y gestión
+                        formativa</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefi-3"
+                        >1.2 / 4.0</strong
+                      >
+                    </div>
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Ausencia de grupos de control y métricas de impacto
+                        real</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefi-4"
+                        >1.0 / 4.0</strong
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="p-3 bg-orange-50/50 rounded border border-orange-100"
+                >
+                  <span class="text-[10px] font-black uppercase text-orange-700"
+                    >Amenazas Externas Clave (MEFE)</span
+                  >
+                  <div
+                    class="mt-1 divide-y divide-orange-100 text-xs text-gray-700"
+                  >
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Alta rotación de la industria BPO en primeros 90
+                        días</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefe-1"
+                        >1.4 / 4.0</strong
+                      >
+                    </div>
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Sanciones de la Ley 2300 de 2023 por errores de
+                        agentes</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefe-2"
+                        >1.8 / 4.0</strong
+                      >
+                    </div>
+                    <div class="py-1.5 flex justify-between">
+                      <span
+                        >Absentismo del personal por desmotivación/baja
+                        asimilación</span
+                      >
+                      <strong class="text-[#012030]" id="f-mefe-3"
+                        >1.5 / 4.0</strong
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DIAGNÓSTICO ESTRATÉGICO EXPANDIDO: 20 PREGUNTAS -->
+          <div
+            class="bg-[#012030] text-white p-6 rounded-lg custom-shadow space-y-6"
+          >
+            <div
+              class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+            >
+              <div class="space-y-1">
+                <span class="aecsa-eyebrow text-[#C0DD17]"
+                  >Evaluación del Core de Operación</span
+                >
+                <h3 class="text-xl font-bold">
+                  Asistente de Diagnóstico Extendido (20 Preguntas)
+                </h3>
+                <p class="text-xs text-gray-300">
+                  Descubre con total precisión el cuadrante estratégico de tu
+                  área en la matriz y genera conclusiones de negocio[cite: 2].
+                </p>
+              </div>
+              <button
+                id="btn-start-wizard"
+                onclick="startWizard()"
+                class="bg-[#C0DD17] text-[#012030] font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-[#A4BE00] transition-all flex items-center gap-2"
+              >
+                <i class="fa-solid fa-play"></i> Iniciar Diagnóstico Completo
+              </button>
+            </div>
+
+            <!-- Wizard Container -->
+            <div
+              id="wizard-container"
+              class="hidden bg-[#126788] p-6 rounded-lg border border-teal-500/30 space-y-6 fade-in"
+            >
+              <!-- Barra de Progreso -->
+              <div
+                class="flex items-center justify-between text-xs font-semibold text-gray-200"
+              >
+                <span id="wizard-progress-txt">Pregunta 1 de 20</span>
+                <div
+                  class="w-2/3 bg-[#012030] h-2.5 rounded-full overflow-hidden"
+                >
+                  <div
+                    id="wizard-progress-bar"
+                    class="bg-[#C0DD17] h-full transition-all duration-300"
+                    style="width: 5%"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Panel de Pregunta Actual -->
+              <div id="wizard-questions-view" class="space-y-4">
+                <h4 id="wizard-q-title" class="font-bold text-base text-white">
+                  Cargando pregunta...
+                </h4>
+                <p id="wizard-q-desc" class="text-xs text-gray-200">
+                  Descripción...
+                </p>
+
+                <!-- Opciones de Selección (Escala de 1 a 4) -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
+                  <!-- Se inyecta dinámicamente por JS -->
+                </div>
+              </div>
+
+              <!-- Panel de Resultados -->
+              <div
+                id="wizard-results-view"
+                class="hidden text-center py-4 space-y-3 fade-in"
+              >
+                <!-- Se inyecta dinámicamente por JS al finalizar -->
+              </div>
+
+              <!-- Botones de Navegación del Wizard -->
+              <div
+                id="wizard-nav-buttons"
+                class="flex justify-between items-center pt-2 border-t border-teal-500/30"
+              >
+                <button
+                  id="btn-prev-q"
+                  onclick="wizardPrev()"
+                  class="text-xs text-white underline hover:text-[#C0DD17] disabled:opacity-50 disabled:no-underline"
+                  disabled
+                >
+                  <i class="fa-solid fa-chevron-left"></i> Anterior
+                </button>
+                <button
+                  onclick="cancelWizard()"
+                  class="text-xs text-red-200 hover:text-red-400 transition-all"
+                >
+                  Cancelar Diagnóstico
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA: PIRÁMIDE KIRKPATRICK -->
+      <section id="kirkpatrick-pyramid" class="tab-content space-y-8">
+        <div
+          class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4"
+          >
+            <div>
+              <span class="aecsa-eyebrow"
+                >Metodología de Evaluación de Impacto</span
+              >
+              <h2 class="text-2xl font-black text-[#012030]">
+                Los 4 Niveles de Kirkpatrick & Retorno de Inversión
+              </h2>
+              <p class="text-sm text-gray-500">
+                Haz clic en cada nivel o pasa el cursor para conocer las
+                métricas detalladas, desafíos específicos en cobranza BPO y el
+                enfoque "Socio de Negocio" de AECSA[cite: 2].
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <!-- Pirámide Interactiva SVG Premium -->
+            <div class="lg:col-span-6 flex flex-col items-center">
+              <svg viewBox="0 0 540 400" class="w-full max-w-[480px]">
+                <defs>
+                  <!-- Sombras y efectos de brillo -->
+                  <filter
+                    id="shadow-premium"
+                    x="-10%"
+                    y="-10%"
+                    width="120%"
+                    height="120%"
+                  >
+                    <feDropShadow
+                      dx="2"
+                      dy="6"
+                      stdDeviation="4"
+                      flood-color="#012030"
+                      flood-opacity="0.15"
+                    />
+                  </filter>
+
+                  <!-- Degradado para la flecha lateral de valor -->
+                  <linearGradient
+                    id="gradient-value"
+                    x1="0%"
+                    y1="100%"
+                    x2="0%"
+                    y2="0%"
+                  >
+                    <feStop offset="0%" stop-color="#C0DD17" />
+                    <feStop offset="50%" stop-color="#47C2AE" />
+                    <feStop offset="100%" stop-color="#012030" />
+                  </linearGradient>
+                </defs>
+
+                <!-- Flecha Derecha: Incremento de Complejidad y Valor -->
+                <path
+                  d="M 500,380 L 500,100"
+                  stroke="url(#gradient-value)"
+                  stroke-width="6"
+                  stroke-linecap="round"
+                  stroke-dasharray="2,5"
+                />
+                <polygon points="500,80 492,100 508,100" fill="#012030" />
+                <text
+                  x="515"
+                  y="240"
+                  font-family="Volte, Inter, sans-serif"
+                  font-weight="700"
+                  font-size="10"
+                  fill="#126788"
+                  text-anchor="middle"
+                  transform="rotate(90, 515, 240)"
+                >
+                  Complejidad y Valor Estratégico
+                </text>
+
+                <!-- Grupo Nivel 4 (Resultados) -->
+                <g
+                  id="g-pyr-4"
+                  class="pyramid-segment"
+                  onclick="selectPyramidLevel(4)"
+                >
+                  <polygon
+                    points="270,30 200,110 340,110"
+                    fill="#012030"
+                    filter="url(#shadow-premium)"
+                  ></polygon>
+                  <text
+                    x="270"
+                    y="85"
+                    font-family="Volte, Inter, sans-serif"
+                    font-weight="700"
+                    font-size="12"
+                    fill="#FFFFFF"
+                    text-anchor="middle"
+                  >
+                    N4: Resultados
+                  </text>
+                </g>
+
+                <!-- Grupo Nivel 3 (Comportamiento) -->
+                <g
+                  id="g-pyr-3"
+                  class="pyramid-segment"
+                  onclick="selectPyramidLevel(3)"
+                >
+                  <polygon
+                    points="196,118 140,200 400,200 344,118"
+                    fill="#126788"
+                    filter="url(#shadow-premium)"
+                  ></polygon>
+                  <text
+                    x="270"
+                    y="168"
+                    font-family="Volte, Inter, sans-serif"
+                    font-weight="700"
+                    font-size="12"
+                    fill="#FFFFFF"
+                    text-anchor="middle"
+                  >
+                    N3: Comportamiento
+                  </text>
+                </g>
+
+                <!-- Grupo Nivel 2 (Aprendizaje) -->
+                <g
+                  id="g-pyr-2"
+                  class="pyramid-segment"
+                  onclick="selectPyramidLevel(2)"
+                >
+                  <polygon
+                    points="136,208 80,290 460,290 404,208"
+                    fill="#47C2AE"
+                    filter="url(#shadow-premium)"
+                  ></polygon>
+                  <text
+                    x="270"
+                    y="258"
+                    font-family="Volte, Inter, sans-serif"
+                    font-weight="700"
+                    font-size="12"
+                    fill="#012030"
+                    text-anchor="middle"
+                  >
+                    N2: Aprendizaje
+                  </text>
+                </g>
+
+                <!-- Grupo Nivel 1 (Reacción) -->
+                <g
+                  id="g-pyr-1"
+                  class="pyramid-segment"
+                  onclick="selectPyramidLevel(1)"
+                >
+                  <polygon
+                    points="76,298 20,380 520,380 464,298"
+                    fill="#C0DD17"
+                    filter="url(#shadow-premium)"
+                  ></polygon>
+                  <text
+                    x="270"
+                    y="348"
+                    font-family="Volte, Inter, sans-serif"
+                    font-weight="700"
+                    font-size="12"
+                    fill="#012030"
+                    text-anchor="middle"
+                  >
+                    N1: Reacción
+                  </text>
+                </g>
+              </svg>
+
+              <!-- Acceso rápido optimizado para móviles (Alternativa de botones con buen Target Size) -->
+              <div class="flex flex-wrap justify-center gap-2 mt-4 lg:hidden">
+                <button
+                  onclick="selectPyramidLevel(1)"
+                  class="px-3 py-1.5 bg-[#C0DD17] text-[#012030] text-xs font-bold rounded shadow"
+                >
+                  Nivel 1
+                </button>
+                <button
+                  onclick="selectPyramidLevel(2)"
+                  class="px-3 py-1.5 bg-[#47C2AE] text-white text-xs font-bold rounded shadow"
+                >
+                  Nivel 2
+                </button>
+                <button
+                  onclick="selectPyramidLevel(3)"
+                  class="px-3 py-1.5 bg-[#126788] text-white text-xs font-bold rounded shadow"
+                >
+                  Nivel 3
+                </button>
+                <button
+                  onclick="selectPyramidLevel(4)"
+                  class="px-3 py-1.5 bg-[#012030] text-white text-xs font-bold rounded shadow"
+                >
+                  Nivel 4
+                </button>
+              </div>
+            </div>
+
+            <!-- Información Detallada del Nivel Seleccionado -->
+            <div class="lg:col-span-6">
+              <div
+                id="level-detail-card"
+                class="bg-[#F4F5F6] rounded-lg p-6 border-l-4 border-[#012030] space-y-4 min-h-[340px] fade-in"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="text-xs uppercase font-bold tracking-widest text-[#126788]"
+                    id="pyr-subtitle-lvl"
+                    >NIVEL KIRKPATRICK 4</span
+                  >
+                  <span
+                    class="bg-[#012030] text-white text-xs font-bold px-3 py-1 rounded-full"
+                    id="pyr-badge-lvl"
+                    >Nivel 4</span
+                  >
+                </div>
+
+                <h3 class="text-xl font-bold text-[#012030]" id="pyr-title">
+                  Resultados de Impacto
+                </h3>
+                <p class="text-sm text-gray-600 leading-relaxed" id="pyr-desc">
+                  Se evalúa si el programa de entrenamiento ha modificado las
+                  métricas operativas directas de negocio. El foco no es solo
+                  verificar cuántos cursos se completaron, sino cuánto se movió
+                  el indicador financiero o de recuperación de cartera[cite: 2].
+                </p>
+
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-200 pt-4"
+                >
+                  <div>
+                    <p
+                      class="text-xs font-bold text-[#012030] flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-calculator text-[#126788]"></i>
+                      Indicadores Clave (KPIs):
+                    </p>
+                    <p
+                      class="text-xs text-gray-500 mt-1 leading-normal"
+                      id="pyr-kpis"
+                    >
+                      Variación de la Tasa de Recuperación, Variación de la
+                      Rotación Temprana, Retorno Financiero (ROI) y ROE[cite:
+                      2].
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      class="text-xs font-bold text-[#012030] flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-headset text-[#126788]"></i>
+                      Aplicabilidad en Cobranzas:
+                    </p>
+                    <p
+                      class="text-xs text-gray-500 mt-1 leading-normal"
+                      id="pyr-app"
+                    >
+                      Verificado en la tasa de recuperación de cartera, promesas
+                      de pago hechas efectivas y en la reducción real de la
+                      curva hacia la productividad en los primeros días[cite:
+                      2].
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla comparativa de enfoque: Administrativo vs Socio de Negocio -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden mt-6">
+            <div class="bg-[#012030] text-white p-4">
+              <h4 class="font-bold text-sm flex items-center gap-2">
+                <i class="fa-solid fa-scale-balanced text-[#C0DD17]"></i> Tabla
+                de Enfoque Estratégico AECSA
+              </h4>
+            </div>
+            <div
+              class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200 text-xs bg-white"
+            >
+              <div class="p-4 space-y-2">
+                <span class="font-bold text-[#F05C05] block uppercase"
+                  >Evaluación Tradicional</span
+                >
+                <p class="text-gray-600 leading-relaxed">
+                  Limitado a encuestas de satisfacción física y teórica simples
+                  al final de la jornada. No se asocia con el rendimiento en el
+                  piso o con el cumplimiento posterior del asesor[cite: 2].
+                </p>
+              </div>
+              <div class="p-4 space-y-2">
+                <span class="font-bold text-[#126788] block uppercase"
+                  >Enfoque Kirkpatrick AECSA</span
+                >
+                <p class="text-gray-600 leading-relaxed">
+                  Estructuración técnica con un proceso que viaja del aula al
+                  comportamiento directo verificado en auditorías de llamada,
+                  cerrando brechas con acompañamiento de entrenadores[cite: 2].
+                </p>
+              </div>
+              <div class="p-4 space-y-2">
+                <span
+                  class="font-bold text-[#C0DD17] bg-[#012030] inline-block px-1.5 py-0.5 rounded uppercase"
+                  >Impacto "Socio de Negocio"</span
+                >
+                <p class="text-gray-600 leading-relaxed font-semibold">
+                  Integración de la tasa de conversión de promesas de pago con
+                  bases de datos operativas reales, justificando la inversión
+                  pedagógica frente a la estacionalidad del recaudo[cite: 2].
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA: CALCULATOR STUDIO -->
+      <section id="calculator-studio" class="tab-content space-y-8">
+        <div
+          class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-6"
+        >
+          <div>
+            <span class="aecsa-eyebrow">Rentabilidad Cuantificable</span>
+            <h2 class="text-2xl font-black text-[#012030]">
+              Simulador de Retorno Operativo (ROI, ROE & Valor de Planta)
+            </h2>
+            <p class="text-sm text-gray-500">
+              Mide el impacto real del acompañamiento de los entrenadores de
+              planta comparando el recaudo de asesores intervenidos vs. grupo de
+              control frente al costo hora de formación.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Entrada de Datos Operativos -->
+            <div class="lg:col-span-6 space-y-4 bg-[#F4F5F6] p-6 rounded-lg">
+              <h3
+                class="font-bold text-[#012030] border-b pb-2 flex items-center justify-between"
+              >
+                <span
+                  ><i class="fa-solid fa-stopwatch text-[#126788] mr-2"></i
+                  >Inversión en Hora-Entrenador</span
+                >
+                <span class="text-xs text-gray-500 font-normal"
+                  >Costo de Planta</span
+                >
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Costo Hora Entrenador ($COP)</label
+                  >
+                  <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-gray-500 text-xs"
+                      >$</span
+                    >
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="trainer-hourly-rate"
+                      value="25.000"
+                      class="pl-7 pr-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                      oninput="
+                        formatInputCurrency(this);
+                        calculateROI();
+                      "
+                    />
+                  </div>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Salario hora + prestaciones de planta
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Horas Acompañamiento / Cohorte</label
+                  >
+                  <input
+                    type="number"
+                    id="trainer-hours"
+                    value="40"
+                    class="px-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                    oninput="calculateROI()"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Horas en aula + clínica de piso por entrenador
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Número de Entrenadores</label
+                  >
+                  <input
+                    type="number"
+                    id="trainers-qty"
+                    value="2"
+                    class="px-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                    oninput="calculateROI()"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Entrenadores asignados a la campaña
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Agentes Acompañados (Intervenidos)</label
+                  >
+                  <input
+                    type="number"
+                    id="agents-qty"
+                    value="25"
+                    class="px-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                    oninput="calculateROI()"
+                  />
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Asesores en el programa de acompañamiento
+                  </p>
+                </div>
+              </div>
+
+              <h3
+                class="font-bold text-[#012030] border-b pb-2 pt-2 flex items-center justify-between"
+              >
+                <span
+                  ><i class="fa-solid fa-code-compare text-[#F05C05] mr-2"></i
+                  >Recaudo Comparativo (Prueba de Control)</span
+                >
+                <span class="text-xs text-gray-500 font-normal"
+                  >Impacto Directo</span
+                >
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Recaudo Agente SIN Acompañamiento</label
+                  >
+                  <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-gray-500 text-xs"
+                      >$</span
+                    >
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="recaudo-sin-entrenador"
+                      value="12.000.000"
+                      class="pl-7 pr-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                      oninput="
+                        formatInputCurrency(this);
+                        calculateROI();
+                      "
+                    />
+                  </div>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Promedio mensual Grupo Control (Baseline)
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1"
+                    >Recaudo Agente CON Acompañamiento</label
+                  >
+                  <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-gray-500 text-xs"
+                      >$</span
+                    >
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="recaudo-con-entrenador"
+                      value="15.500.000"
+                      class="pl-7 pr-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                      oninput="
+                        formatInputCurrency(this);
+                        calculateROI();
+                      "
+                    />
+                  </div>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Promedio mensual Grupo Intervenido
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1"
+                  >Meta de Recaudo Incremental SLA ($COP/agente)</label
+                >
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-gray-500 text-xs"
+                    >$</span
+                  >
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="sla-target-increment"
+                    value="2.500.000"
+                    class="pl-7 pr-3 py-2 w-full border border-gray-300 rounded font-semibold text-[#012030] outline-none focus:border-[#C0DD17]"
+                    oninput="
+                      formatInputCurrency(this);
+                      calculateROI();
+                    "
+                  />
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">
+                  Compromiso acordado con Gerencia de Operaciones para medir ROE
+                </p>
+              </div>
+            </div>
+
+            <!-- Resultados Financieros y Métricas de Planta -->
+            <div
+              class="lg:col-span-6 flex flex-col justify-between border border-gray-200 rounded-lg p-6 bg-white space-y-6"
+            >
+              <div>
+                <h3
+                  class="font-bold text-[#012030] border-b pb-2 mb-4 flex items-center justify-between"
+                >
+                  <span
+                    ><i class="fa-solid fa-chart-pie text-[#C0DD17] mr-2"></i
+                    >Consolidado de Métricas de Entrenamiento</span
+                  >
+                  <span
+                    class="text-xs bg-[#012030] text-[#C0DD17] px-2 py-0.5 rounded font-bold"
+                    >AECSA Metrics</span
+                  >
+                </h3>
+
+                <div class="grid grid-cols-2 gap-4 text-center">
+                  <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <p
+                      class="text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                    >
+                      Costo Inversión Entrenamiento
+                    </p>
+                    <p
+                      class="text-xl font-black text-[#012030] mt-1"
+                      id="cost-training-val"
+                    >
+                      $2,000,000
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">
+                      Horas * Costo/Hora Entrenador
+                    </p>
+                  </div>
+
+                  <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <p
+                      class="text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                    >
+                      Recaudo Incremental Total
+                    </p>
+                    <p
+                      class="text-xl font-black text-blue-700 mt-1"
+                      id="incremental-recaudo-val"
+                    >
+                      $87,500,000
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">
+                      Delta por Agente * N° Agentes
+                    </p>
+                  </div>
+
+                  <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <p
+                      class="text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                    >
+                      ROI Financiero Operativo
+                    </p>
+                    <p
+                      class="text-2xl font-black text-[#012030] mt-1"
+                      id="roi-val"
+                    >
+                      4275%
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">
+                      Retorno Neto vs. Costo Entrenador
+                    </p>
+                  </div>
+
+                  <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <p
+                      class="text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                    >
+                      Beneficio Neto de Cartera
+                    </p>
+                    <p
+                      class="text-xl font-bold text-green-600 mt-1"
+                      id="net-benefit-val"
+                    >
+                      $85,500,000
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">
+                      Recaudo Incremental - Costo
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Indicador Clave de Planta: Recaudo por Hora de Entrenador -->
+                <div
+                  class="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg flex items-center justify-between"
+                >
+                  <div>
+                    <p class="text-xs font-bold text-[#012030]">
+                      <i class="fa-solid fa-bolt text-teal-600 mr-1"></i>
+                      Eficiencia por Hora de Entrenador:
+                    </p>
+                    <p class="text-[11px] text-gray-600">
+                      Recaudo incremental generado por cada hora invertida por
+                      el entrenador.
+                    </p>
+                  </div>
+                  <div class="text-right whitespace-nowrap">
+                    <span
+                      class="text-lg font-black text-[#012030]"
+                      id="trainer-hourly-yield"
+                      >$1,093,750</span
+                    >
+                    <p class="text-[9px] text-teal-800 font-bold uppercase">
+                      / Hora Entrenador
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- El Retorno sobre las Expectativas (ROE) & SLA -->
+              <div class="bg-[#012030] text-white p-4 rounded-lg space-y-2">
+                <div class="flex justify-between items-center">
+                  <h4
+                    class="text-xs font-bold text-[#C0DD17] flex items-center gap-1"
+                  >
+                    <i class="fa-solid fa-star"></i> Cumplimiento ROE (SLA de
+                    Operaciones)
+                  </h4>
+                  <span
+                    id="roe-percent-badge"
+                    class="bg-[#C0DD17] text-[#012030] font-black text-xs px-2 py-0.5 rounded"
+                    >140% Metas</span
+                  >
+                </div>
+                <p
+                  class="text-xs text-gray-300 leading-relaxed"
+                  id="roe-explanation-txt"
+                >
+                  El incremento real por agente fue de
+                  <strong>$3,500,000</strong> frente a la meta acordada con
+                  operaciones de <strong>$2,500,000</strong>. Esto representa un
+                  cumplimiento del <strong>140%</strong> de las expectativas del
+                  SLA.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA: RIESGOS Y LEY 2300 -->
+      <section id="risks-compliance" class="tab-content space-y-8">
+        <div
+          class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-6"
+        >
+          <div>
+            <span class="aecsa-eyebrow text-[#F05C05]"
+              >Cumplimiento Normativo</span
+            >
+            <h2 class="text-2xl font-black text-[#012030]">
+              Blindaje Legal y Mitigación de Riesgos
+            </h2>
+            <p class="text-sm text-gray-500">
+              En cobranza y recuperación, el entrenamiento de calidad es la
+              primera línea de defensa para prevenir costosas multas y
+              demandas[cite: 2].
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              class="border border-[#E3E7EB] rounded-lg p-5 bg-white space-y-3"
+            >
+              <div class="text-[#F05C05] text-2xl">
+                <i class="fa-solid fa-gavel"></i>
+              </div>
+              <h3 class="font-bold text-[#012030]">
+                Ley 2300 de 2023 ("Dejen de Fregar")
+              </h3>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                Establece las directrices para proteger el derecho a la
+                intimidad de los consumidores en el cobro de deudas. Limita
+                canales, días y horarios de contacto autorizados en
+                Colombia[cite: 2].
+              </p>
+              <p
+                class="text-xs font-semibold text-gray-700 bg-red-50 p-2 rounded border border-red-100"
+              >
+                Riesgo: El cobro fuera de los parámetros genera riesgos de
+                sanción reputacional y financiera de entes de control[cite: 2].
+              </p>
+            </div>
+
+            <div
+              class="border border-[#E3E7EB] rounded-lg p-5 bg-white space-y-3"
+            >
+              <div class="text-[#126788] text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <h3 class="font-bold text-[#012030]">
+                El Desafío Operativo de AECSOFT
+              </h3>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                Las múltiples versiones y parches del sistema de gestión
+                comercial (AECSOFT) retrasan de forma notable la adaptación ágil
+                de los nuevos asesores a sus puestos de trabajo en los primeros
+                días[cite: 2].
+              </p>
+              <p
+                class="text-xs font-semibold text-gray-700 bg-blue-50 p-2 rounded border border-blue-100"
+              >
+                Riesgo: El tiempo de familiarización con la herramienta satura y
+                reduce el tiempo disponible para técnicas persuasivas[cite: 2].
+              </p>
+            </div>
+
+            <div
+              class="border border-[#E3E7EB] rounded-lg p-5 bg-white space-y-3"
+            >
+              <div class="text-[#47C2AE] text-2xl">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+              <h3 class="font-bold text-[#012030]">
+                Capacitación Despersonalizada
+              </h3>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                Enseñar materiales planos por igual a todas las áreas, ignorando
+                las que no son estrictamente de operación comercial, fractura la
+                sinergia global del ecosistema interno de AECSA[cite: 2].
+              </p>
+              <p
+                class="text-xs font-semibold text-gray-700 bg-teal-50 p-2 rounded border border-teal-100"
+              >
+                Riesgo: Las áreas de soporte desconocen los procesos del core de
+                negocio, extendiendo los tiempos de resolución[cite: 2].
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="p-6 bg-[#012030] text-white rounded-lg flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div class="space-y-2">
+              <h3 class="text-lg font-bold text-[#C0DD17]">
+                <i class="fa-solid fa-handshake-angle"></i> Compromiso de Nivel
+                de Servicio (SLA)
+              </h3>
+              <p class="text-xs text-gray-300 max-w-2xl leading-relaxed">
+                La propuesta para AECSA es formalizar un compromiso de nivel de
+                servicio (SLA) entre operaciones y entrenamiento: el líder de
+                cartera solicita un re-entrenamiento basado en una brecha de
+                conversión detectada en el mes actual, y entrenamiento entrega
+                una solución a medida evaluable en el mes siguiente[cite: 2].
+              </p>
+            </div>
+            <div
+              class="bg-[#126788] px-4 py-2 rounded text-xs font-bold text-center"
+            >
+              Meta: Cobranza Sin Fricciones
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA: INNOVACIÓN & IA -->
+      <section id="gamification-ai" class="tab-content space-y-8">
+        <div
+          class="bg-white rounded-lg p-6 custom-shadow border border-[#E3E7EB] space-y-6"
+        >
+          <div>
+            <span class="aecsa-eyebrow">Acompañamiento de Vanguardia</span>
+            <h2 class="text-2xl font-black text-[#012030]">
+              Innovación Educativa y Tecnológica
+            </h2>
+            <p class="text-sm text-gray-500">
+              Soluciones de LearnTech para potenciar las habilidades
+              conductuales que la Inteligencia Artificial no automatiza[cite:
+              2].
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <h3 class="font-bold text-[#012030] border-b pb-2">
+                El Futuro del Entrenamiento en Cobranzas
+              </h3>
+
+              <div class="p-4 bg-gray-50 rounded-lg space-y-2">
+                <span
+                  class="bg-[#C0DD17] text-[#012030] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                  >Duolingo de la Cobranza</span
+                >
+                <h4 class="font-bold text-sm text-[#012030]">
+                  ¿Y si la formación de cobranzas es similar a Duolingo?
+                </h4>
+                <p class="text-xs text-gray-600">
+                  Uso de dinámicas de juego (misiones, vidas, niveles de
+                  dificultad, tablas de clasificación) para mejorar de forma
+                  autónoma la asimilación normativa de cobro e interpretación de
+                  Leyes[cite: 2].
+                </p>
+              </div>
+
+              <div class="p-4 bg-gray-50 rounded-lg space-y-2">
+                <span
+                  class="bg-[#47C2AE] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                  >Simulador SARA en Vivo</span
+                >
+                <h4 class="font-bold text-sm text-[#012030]">
+                  ¿Y si SARA es una plataforma de práctica constante?
+                </h4>
+                <p class="text-xs text-gray-600">
+                  Un entorno controlado integrado de práctica constante y
+                  retroalimentación interactiva con casos reales de clientes,
+                  permitiendo evaluar la destreza conductual de los asesores sin
+                  riesgo operativo real[cite: 2].
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="bg-[#012030] text-white p-6 rounded-lg space-y-4 flex flex-col justify-between"
+            >
+              <div class="space-y-2">
+                <span class="aecsa-eyebrow text-[#C0DD17]"
+                  >Enfoque Humano y Tecnológico</span
+                >
+                <h3 class="text-lg font-bold">
+                  Hiperpersonalización mediante IA
+                </h3>
+                <p class="text-xs text-gray-300 leading-relaxed">
+                  En Colombia se avanza de forma constante en procesos
+                  integrados con Inteligencia Artificial, RPA y omnicanalidad
+                  para gestionar tareas mecánicas o repetitivas del proceso
+                  operativo[cite: 2].
+                </p>
+                <p class="text-xs text-gray-300 leading-relaxed">
+                  Ante este panorama, la labor estratégica de los asesores de
+                  cobranza migra hacia el cierre de negociaciones complejas,
+                  empatía y resolución de conflictos. El plan de entrenamiento
+                  es decisivo para cerrar estas brechas humanas[cite: 2].
+                </p>
+              </div>
+
+              <div class="border-t border-gray-700 pt-4 text-xs text-gray-400">
+                <p class="font-bold text-[#C0DD17] mb-1">
+                  Claves de éxito para el Onboarding:
+                </p>
+                <p>
+                  Reducir de forma notable el tiempo hacia la productividad
+                  mediante la correcta gestión de expectativas de los asesores
+                  reclutados[cite: 2].
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Pie de Página -->
+    <footer
+      class="bg-[#012030] text-gray-400 text-center py-6 text-xs mt-auto border-t border-gray-800"
+    >
+      <div class="max-w-7xl mx-auto px-4 space-y-2">
+        <p>© 2026 AECSA S.A.S | Todos los derechos reservados.</p>
+        <p class="text-gray-500">
+          Implementación y Desarrollo de Indicadores Operativos de
+          Entrenamiento.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      function switchTab(tabId) {
+        const contents = document.querySelectorAll(".tab-content");
+        contents.forEach((content) => {
+          content.classList.remove("active");
+        });
+
+        const buttons = document.querySelectorAll(".tab-btn");
+        buttons.forEach((button) => {
+          button.classList.remove(
+            "active",
+            "border-[#C0DD17]",
+            "text-[#012030]",
+          );
+          button.classList.add("text-gray-500", "border-transparent");
+        });
+
+        const selectedContent = document.getElementById(tabId);
+        if (selectedContent) {
+          selectedContent.classList.add("active");
+        }
+
+        const selectedButton = document.getElementById(`btn-${tabId}`);
+        if (selectedButton) {
+          selectedButton.classList.add(
+            "active",
+            "border-[#C0DD17]",
+            "text-[#012030]",
+          );
+          selectedButton.classList.remove(
+            "text-gray-500",
+            "border-transparent",
+          );
+        }
+      }
+
+      const levelDetails = {
+        1: {
+          title: "Nivel 1: Reacción (Satisfacción)",
+          desc: "Mide el grado en que el participante considera que el programa de entrenamiento fue favorable, útil y relevante para su trabajo diario en el Contact Center. Se recolecta a través de valoraciones continuas durante la inducción para reajustar los contenidos pedagógicos en tiempo real.",
+          kpis: "Tasa de satisfacción del facilitador, índice de relevancia del contenido formativo y NPS del taller.",
+          app: "Determina si el deudor o asesor considera que el facilitador fue claro y si las herramientas de persuasión de cobranza explicadas son verdaderamente aplicables a su labor comercial[cite: 2].",
+          color: "#C0DD17",
+        },
+        2: {
+          title: "Nivel 2: Aprendizaje (Conocimientos)",
+          desc: "Mide el grado en que el personal adquiere conocimientos teóricos, habilidades técnicas y la confianza necesaria antes de operar formalmente en la campaña de cobros. Esencial para prevenir el desgaste prematuro del personal.",
+          kpis: "Diferencial promedio entre pre-test y post-test, tasa de aprobación técnica e índice de asimilación de guiones.",
+          app: "Asegura que el asesor domine el uso práctico del aplicativo AECSOFT (parches y versiones) y las restricciones de contacto de la Ley 2300 de 2023[cite: 2].",
+          color: "#47C2AE",
+        },
+        3: {
+          title: "Nivel 3: Comportamiento (Transferencia)",
+          desc: "Evalúa si el conocimiento adquirido se traslada de manera efectiva a situaciones de la vida real mediante auditorías de llamadas. Determina la adherencia a las metodologías persuasivas impartidas en el aula frente a la presión.",
+          kpis: "Tasa de adherencia al script en auditoría, porcentaje de objeciones rebatidas con éxito y ROP (Retorno sobre el Desempeño)[cite: 2].",
+          app: "Verificar en grabaciones si el agente de cobros está cerrando activamente los compromisos mediante técnicas de cierre persuasivo en vez de limitarse a informar el estado de la cuenta[cite: 2].",
+          color: "#126788",
+        },
+        4: {
+          title: "Nivel 4: Resultados de Impacto",
+          desc: "Mide la efectividad real en las metas estratégicas del negocio: aumento directo del recaudo de cartera, disminución del porcentaje de rotación temprana de personal y aceleración de curvas de aprendizaje.",
+          kpis: "Tasa de recuperación efectiva de cartera, disminución de deserción en los primeros 90 días, ROI y ROE[cite: 2].",
+          app: "Evidencia de forma contundente si la inversión de capacitación movió la aguja financiera de la organización de cara a la Alta Dirección de AECSA[cite: 2].",
+          color: "#012030",
+        },
+      };
+
+      function selectPyramidLevel(level) {
+        const details = levelDetails[level];
+        const card = document.getElementById("level-detail-card");
+
+        // Aplicar animación de parpadeo suave
+        card.classList.remove("fade-in");
+        void card.offsetWidth; // Forzar reflow para reiniciar animación
+        card.classList.add("fade-in");
+
+        card.style.borderLeftColor = details.color;
+
+        document.getElementById("pyr-subtitle-lvl").innerText =
+          `NIVEL KIRKPATRICK ${level}`;
+        document.getElementById("pyr-badge-lvl").innerText = `Nivel ${level}`;
+        document.getElementById("pyr-badge-lvl").style.backgroundColor =
+          details.color;
+
+        // Ajustar contraste de texto del badge según fondo
+        if (level === 1 || level === 2) {
+          document.getElementById("pyr-badge-lvl").style.color = "#012030";
+        } else {
+          document.getElementById("pyr-badge-lvl").style.color = "#FFFFFF";
+        }
+
+        document.getElementById("pyr-title").innerText = details.title;
+        document.getElementById("pyr-desc").innerText = details.desc;
+        document.getElementById("pyr-kpis").innerText = details.kpis;
+        document.getElementById("pyr-app").innerText = details.app;
+
+        // Actualizar clase activa en los segmentos SVG
+        document.querySelectorAll(".pyramid-segment").forEach((seg) => {
+          seg.classList.remove("active-segment");
+        });
+        const activeSeg = document.getElementById(`g-pyr-${level}`);
+        if (activeSeg) {
+          activeSeg.classList.add("active-segment");
+        }
+      }
+
+      const wizardQuestions = [
+        {
+          id: "q1",
+          axis: "mefi",
+          title: "1. Adaptación del Sistema AECSOFT",
+          desc: "¿Cuánto tardan los asesores nuevos en asimilar el sistema AECSOFT y sus parches?",
+          options: [
+            {
+              score: 1,
+              label: "Más de 60 días de constantes dudas técnicas operativas.",
+            },
+            {
+              score: 2,
+              label: "Entre 45 y 60 días para operar autónomamente.",
+            },
+            {
+              score: 3,
+              label: "De 20 a 40 días, asimilación regular con soporte manual.",
+            },
+            {
+              score: 4,
+              label: "Menos de 20 días. Entornos de práctica simulada ágiles.",
+            },
+          ],
+        },
+        {
+          id: "q2",
+          axis: "mefi",
+          title: "2. Personalización de Materiales por Áreas",
+          desc: "¿Los materiales formativos se adaptan a las necesidades específicas de las áreas no operativas?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Total despersonalización. Contenidos idénticos y planos para todos.",
+            },
+            {
+              score: 2,
+              label:
+                "Adaptación mínima en nombres de ejemplos sin cambios reales.",
+            },
+            {
+              score: 3,
+              label: "Segmentación clara para áreas clave de soporte.",
+            },
+            {
+              score: 4,
+              label:
+                "Hiperpersonalización. Módulos dinámicos adaptados a cada rol.",
+            },
+          ],
+        },
+        {
+          id: "q3",
+          axis: "mefi",
+          title: "3. Conexión del CRM y Formación",
+          desc: "¿Existe una integración ágil entre el software CRM/marcador de AECSA y la gestión formativa?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Inexistente. No hay flujos cruzados de información o data.",
+            },
+            {
+              score: 2,
+              label: "Manual e infrecuente. Informes planos por correo.",
+            },
+            {
+              score: 3,
+              label: "Sincronización semanal de registros y notas de alumnos.",
+            },
+            {
+              score: 4,
+              label:
+                "Conexión integral en tiempo real con dashboards compartidos.",
+            },
+          ],
+        },
+        {
+          id: "q4",
+          axis: "mefi",
+          title: "4. Métricas de Impacto Post-Capacitación",
+          desc: "¿Cómo se evalúa la efectividad operativa semanas después de haber salido del aula?",
+          options: [
+            {
+              score: 1,
+              label:
+                "No se realiza ningún seguimiento después de la inducción.",
+            },
+            {
+              score: 2,
+              label:
+                "Se hace de manera anecdótica e informal por entrenadores.",
+            },
+            {
+              score: 3,
+              label:
+                "Medición estándar de notas técnicas y cumplimiento pedagógico.",
+            },
+            {
+              score: 4,
+              label:
+                "Evaluación formal de métricas de recaudo post-capacitación.",
+            },
+          ],
+        },
+        {
+          id: "q5",
+          axis: "mefi",
+          title: "5. Uso de Grupos de Control",
+          desc: "¿Se utilizan grupos de control para aislar el impacto del entrenamiento frente a la estacionalidad de cartera?",
+          options: [
+            {
+              score: 1,
+              label: "No, nunca se han implementado grupos piloto con control.",
+            },
+            {
+              score: 2,
+              label:
+                "Se ha intentado informalmente pero sin bases estadísticas sólidas.",
+            },
+            {
+              score: 3,
+              label:
+                "Se usan para campañas de lanzamiento críticas únicamente.",
+            },
+            {
+              score: 4,
+              label:
+                "Práctica estándar. Grupos focales parametrizados mensualmente.",
+            },
+          ],
+        },
+        {
+          id: "q6",
+          axis: "mefi",
+          title: "6. Habilidades Blandas e Inteligencia Emocional",
+          desc: "¿Los talleres abordan de manera formal habilidades de persuasión y gestión de la presión?",
+          options: [
+            {
+              score: 1,
+              label: "Sólo se enseñan procesos y conceptos normativos rígidos.",
+            },
+            {
+              score: 2,
+              label:
+                "Menciones superficiales a la empatía sin ejercicios prácticos.",
+            },
+            {
+              score: 3,
+              label:
+                "Tutorías y juego de roles esporádicos enfocados en la voz.",
+            },
+            {
+              score: 4,
+              label:
+                "Capacitación conductual avanzada certificada en cierre persuasivo.",
+            },
+          ],
+        },
+        {
+          id: "q7",
+          axis: "mefi",
+          title: "7. Sintonía de Supervisores",
+          desc: "¿Los líderes de operaciones guían a sus equipos con las mismas técnicas explicadas en el aula?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Desconexión total. Los líderes exigen basándose en métodos antiguos.",
+            },
+            {
+              score: 2,
+              label: "Conocimiento básico de los líderes pero poco apoyo real.",
+            },
+            {
+              score: 3,
+              label: "Alineamiento parcial. Auditorías conjuntas ocasionales.",
+            },
+            {
+              score: 4,
+              label:
+                "Líderes entrenados formalmente para dar feedback unificado.",
+            },
+          ],
+        },
+        {
+          id: "q8",
+          axis: "mefi",
+          title: "8. Modelo Kirkpatrick - Nivel de Aplicación",
+          desc: "¿Hasta qué nivel del modelo de Kirkpatrick se evalúan los planes estructurados formativos?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Únicamente Nivel 1 (Reacción/Satisfacción de encuesta típica).",
+            },
+            {
+              score: 2,
+              label:
+                "Nivel 2 (Exámenes de conocimiento / Pre-post test técnico).",
+            },
+            {
+              score: 3,
+              label:
+                "Nivel 3 (Monitoreo y auditoría de comportamiento telefónico).",
+            },
+            {
+              score: 4,
+              label:
+                "Nivel 4 (Medición de aguja financiera y ROI del negocio).",
+            },
+          ],
+        },
+        {
+          id: "q9",
+          axis: "mefi",
+          title: "9. Casos de Éxito Inusuales (Brinkerhoff)",
+          desc: "¿Se realiza un seguimiento a los asesores sobresalientes para descubrir y documentar sus buenas prácticas?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Ignorado. Cada asesor sobresaliente opera de forma aislada.",
+            },
+            {
+              score: 2,
+              label: "Se reconocen pero no se analizan los motivos del éxito.",
+            },
+            {
+              score: 3,
+              label:
+                "Documentación ocasional de discursos exitosos para el equipo.",
+            },
+            {
+              score: 4,
+              label:
+                "Estructura formal para integrar casos de éxito en nuevos módulos.",
+            },
+          ],
+        },
+        {
+          id: "q10",
+          axis: "mefi",
+          title: "10. Impacto en Clientes Finales (Kaufman)",
+          desc: "¿Evaluamos la calidad humana y satisfacción de los clientes contactados para fortalecer la reputación del banco socio?",
+          options: [
+            {
+              score: 1,
+              label:
+                "No. Solo importa el recaudo sin mirar la experiencia del deudor.",
+            },
+            {
+              score: 2,
+              label: "Se evalúa de manera reactiva ante las quejas.",
+            },
+            {
+              score: 3,
+              label:
+                "Encuestas esporádicas de calidad post-atención de llamadas.",
+            },
+            {
+              score: 4,
+              label:
+                "Monitoreo sistemático de experiencia y percepción social.",
+            },
+          ],
+        },
+        {
+          id: "q11",
+          axis: "mefe",
+          title: "11. Mitigación de Rotación Temprana BPO",
+          desc: "¿Los procesos de capacitación logran reducir de manera medible la deserción de agentes en los primeros 90 días?",
+          options: [
+            {
+              score: 1,
+              label: "Nula incidencia. La rotación temprana sigue desbordada.",
+            },
+            {
+              score: 2,
+              label: "Efecto menor, se nota cierta contención del personal.",
+            },
+            {
+              score: 3,
+              label:
+                "Estructura intermedia. Contiene hasta un 25% de la deserción.",
+            },
+            {
+              score: 4,
+              label:
+                "Excelente impacto. Reducción certificada de hasta un 53%.",
+            },
+          ],
+        },
+        {
+          id: "q12",
+          axis: "mefe",
+          title: "12. Cumplimiento de la Ley 2300 de 2023",
+          desc: "¿Cómo califica el blindaje regulatorio ante la Ley 2300 de 2023 en las llamadas de los agentes?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Crítico. Los agentes cometen errores de contacto u horarios.",
+            },
+            {
+              score: 2,
+              label:
+                "Bajo control pero con incidentes o fallos humanos recurrentes.",
+            },
+            {
+              score: 3,
+              label:
+                "Cumplimiento sólido con auditorías esporádicas de control.",
+            },
+            {
+              score: 4,
+              label:
+                "Blindaje normativo absoluto. Re-entrenamiento con cero incidencias.",
+            },
+          ],
+        },
+        {
+          id: "q13",
+          axis: "mefe",
+          title: "13. Dinámicas de Gamificación",
+          desc: "¿El plan de formación incluye dinámicas de juego (misiones, vidas, niveles de dificultad)?",
+          options: [
+            {
+              score: 1,
+              label: "Sistemas tradicionales planos. Presentaciones teóricas.",
+            },
+            {
+              score: 2,
+              label: "Se organizan concursos sencillos de preguntas al final.",
+            },
+            {
+              score: 3,
+              label:
+                "Plataforma intermedia con dinámicas estructuradas básicas.",
+            },
+            {
+              score: 4,
+              label:
+                "Plataforma interactiva de microlearning gamificado constante.",
+            },
+          ],
+        },
+        {
+          id: "q14",
+          axis: "mefe",
+          title: "14. Hiperpersonalización con IA",
+          desc: "¿Se utiliza inteligencia artificial para identificar y cerrar de manera personalizada brechas de habilidades?",
+          options: [
+            {
+              score: 1,
+              label:
+                "No se implementan herramientas tecnológicas inteligentes.",
+            },
+            {
+              score: 2,
+              label:
+                "Diagnóstico inicial básico apoyado en software convencional.",
+            },
+            {
+              score: 3,
+              label:
+                "Evaluaciones inteligentes automatizadas de conocimientos.",
+            },
+            {
+              score: 4,
+              label:
+                "IA predictiva que diseña rutas formativas a la medida por agente.",
+            },
+          ],
+        },
+        {
+          id: "q15",
+          axis: "mefe",
+          title: "15. Acuerdos de Nivel de Servicio (SLAs)",
+          desc: "¿Se formalizan acuerdos de nivel de servicio (SLA) específicos entre entrenamiento y operaciones?",
+          options: [
+            {
+              score: 1,
+              label: "No hay acuerdos de metas compartidas de ningún tipo.",
+            },
+            {
+              score: 2,
+              label: "Coordinaciones puntuales informales ante cierres de mes.",
+            },
+            {
+              score: 3,
+              label:
+                "SLA estipulado por correo pero sin consecuencias operativas.",
+            },
+            {
+              score: 4,
+              label:
+                "Acuerdo formal. Re-entrenamiento obligatorio por desvíos.",
+            },
+          ],
+        },
+        {
+          id: "q16",
+          axis: "mefe",
+          title: "16. Transparencia en Reclutamiento (Expectativas)",
+          desc: "¿Las áreas de Talento Humano y Selección alinean las expectativas de ingreso con la realidad del puesto?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Venta de humo. Expectativas falsas que causan deserción inmediata.",
+            },
+            {
+              score: 2,
+              label: "Cierta desconexión, pero se explican las tareas básicas.",
+            },
+            {
+              score: 3,
+              label: "Claridad regular sobre turnos y presión del negocio.",
+            },
+            {
+              score: 4,
+              label:
+                "Proceso riguroso que evalúa el perfil frente al reto real.",
+            },
+          ],
+        },
+        {
+          id: "q17",
+          axis: "mefe",
+          title: "17. Presupuesto Formativo Estratégico",
+          desc: "¿La Dirección apoya con presupuesto y recursos las propuestas formativas estructuradas?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Subinversión constante. El área se percibe solo como un gasto.",
+            },
+            {
+              score: 2,
+              label: "Recursos mínimos solo para mantener operaciones básicas.",
+            },
+            {
+              score: 3,
+              label: "Presupuesto estándar para proyectos críticos aprobados.",
+            },
+            {
+              score: 4,
+              label:
+                "Inversión prioritaria respaldada por el retorno financiero.",
+            },
+          ],
+        },
+        {
+          id: "q18",
+          axis: "mefe",
+          title: "18. Transición a Omnicanalidad",
+          desc: "¿La capacitación integra el uso de canales digitales (RPA, WhatsApp, Chatbots) junto a la telefonía?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Telefonía analógica rígida. Cero foco en canales digitales.",
+            },
+            {
+              score: 2,
+              label: "Uso experimental de chats sin guiones estructurados.",
+            },
+            {
+              score: 3,
+              label: "Formación estructurada en canales escritos básica.",
+            },
+            {
+              score: 4,
+              fill: "#FFF",
+              label:
+                "Ecosistema unificado de cobranza omnicanal de vanguardia.",
+            },
+          ],
+        },
+        {
+          id: "q19",
+          axis: "mefe",
+          title: "19. Absentismo en Programas",
+          desc: "¿El absentismo de los agentes en las sesiones de acompañamiento o actualización está controlado?",
+          options: [
+            {
+              score: 1,
+              label: "Alto absentismo. Las salas de capacitación lucen vacías.",
+            },
+            {
+              score: 2,
+              label:
+                "Inasistencias comunes excusadas por carga de operaciones.",
+            },
+            {
+              score: 3,
+              label:
+                "Asistencia controlada mediante firmas manuales estrictas.",
+            },
+            {
+              score: 4,
+              label:
+                "Absentismo mínimo. Cultura de alta relevancia del aprendizaje.",
+            },
+          ],
+        },
+        {
+          id: "q20",
+          axis: "mefi",
+          title: "20. Incentivos y Reconocimientos",
+          desc: "¿Existen incentivos o reconocimientos al personal que combina un rendimiento académico y operativo sobresaliente?",
+          options: [
+            {
+              score: 1,
+              label:
+                "Inexistentes. No hay diferencias entre quién aprende y quién no.",
+            },
+            {
+              score: 2,
+              label:
+                "Menciones simbólicas ocasionales sin impacto de motivación.",
+            },
+            {
+              score: 3,
+              label: "Incentivos no monetarios esporádicos en cartelera.",
+            },
+            {
+              score: 4,
+              label:
+                "Programa estructurado que recompensa el saber y el hacer de cartera.",
+            },
+          ],
+        },
+      ];
+
+      let currentWizardIdx = 0;
+      let wizardAnswers = {};
+
+      function startWizard() {
+        currentWizardIdx = 0;
+        wizardAnswers = {};
+        document.getElementById("wizard-container").classList.remove("hidden");
+        document
+          .getElementById("wizard-questions-view")
+          .classList.remove("hidden");
+        document.getElementById("wizard-results-view").classList.add("hidden");
+        document
+          .getElementById("wizard-nav-buttons")
+          .classList.remove("hidden");
+        document.getElementById("btn-start-wizard").innerText =
+          "Reiniciar Diagnóstico Completo";
+        renderWizardQuestion();
+      }
+
+      function renderWizardQuestion() {
+        const q = wizardQuestions[currentWizardIdx];
+
+        document.getElementById("wizard-progress-txt").innerText =
+          `Pregunta ${currentWizardIdx + 1} de ${wizardQuestions.length}`;
+        const progressPercent =
+          ((currentWizardIdx + 1) / wizardQuestions.length) * 100;
+        document.getElementById("wizard-progress-bar").style.width =
+          `${progressPercent}%`;
+
+        document.getElementById("wizard-q-title").innerText = q.title;
+        document.getElementById("wizard-q-desc").innerText = q.desc;
+
+        document.getElementById("btn-prev-q").disabled = currentWizardIdx === 0;
+
+        const containerOptions = document.querySelector(
+          "#wizard-questions-view div.grid",
+        );
+        containerOptions.innerHTML = "";
+
+        q.options.forEach((opt) => {
+          const isSelected = wizardAnswers[q.id] === opt.score;
+          const activeClass = isSelected
+            ? "border-[#C0DD17] bg-[#012030] ring-2 ring-[#C0DD17]"
+            : "border-teal-500/30 bg-[#012030]/50 hover:bg-[#012030]";
+
+          let colorScoreClass = "text-gray-300";
+          if (opt.score === 1) colorScoreClass = "text-red-400 font-bold";
+          if (opt.score === 2) colorScoreClass = "text-yellow-400 font-bold";
+          if (opt.score === 3) colorScoreClass = "text-blue-300 font-bold";
+          if (opt.score === 4) colorScoreClass = "text-[#C0DD17] font-bold";
+
+          const btnHtml = `
+          <button onclick="selectWizardValue(${opt.score})" class="w-full text-left p-3 rounded-lg border ${activeClass} text-xs transition-all flex flex-col justify-between min-h-[110px]">
+            <span class="${colorScoreClass}">${opt.score}. ${getScoreLabel(opt.score)}</span>
+            <span class="text-[10px] text-gray-200 mt-2 leading-snug">${opt.label}</span>
+          </button>
+        `;
+          containerOptions.innerHTML += btnHtml;
+        });
+      }
+
+      function getScoreLabel(score) {
+        if (score === 1) return "Crítico";
+        if (score === 2) return "Débil";
+        if (score === 3) return "Fuerte";
+        return "Sobresaliente";
+      }
+
+      function selectWizardValue(scoreValue) {
+        const q = wizardQuestions[currentWizardIdx];
+        wizardAnswers[q.id] = scoreValue;
+
+        if (currentWizardIdx < wizardQuestions.length - 1) {
+          currentWizardIdx++;
+          renderWizardQuestion();
+        } else {
+          finishWizard();
+        }
+      }
+
+      function wizardPrev() {
+        if (currentWizardIdx > 0) {
+          currentWizardIdx--;
+          renderWizardQuestion();
+        }
+      }
+
+      function cancelWizard() {
+        document.getElementById("wizard-container").classList.add("hidden");
+        document.getElementById("btn-start-wizard").innerText =
+          "Iniciar Diagnóstico Completo";
+      }
+
+      function finishWizard() {
+        let mefiSum = 0;
+        let mefiCount = 0;
+        let mefeSum = 0;
+        let mefeCount = 0;
+
+        for (const q of wizardQuestions) {
+          const val = wizardAnswers[q.id] || 2.0;
+          if (q.axis === "mfi" || q.axis === "mefi") {
+            mfiSum = mefiSum + val;
+            mefiSum += val;
+            mefiCount++;
+          } else {
+            mefeSum += val;
+            mefeCount++;
+          }
+        }
+
+        const mefiAvg = mefiSum / mefiCount;
+        const mefeAvg = mefeSum / mefeCount;
+
+        updateMatrixValuesAndChart(mfiSum / mefiCount, mefeAvg);
+
+        const questionsView = document.getElementById("wizard-questions-view");
+        const resultsView = document.getElementById("wizard-results-view");
+        const navButtons = document.getElementById("wizard-nav-buttons");
+
+        questionsView.classList.add("hidden");
+        resultsView.classList.remove("hidden");
+        navButtons.classList.add("hidden");
+
+        let conclusionText = "";
+        if (mefiAvg >= 2.5 && mefeAvg >= 2.5) {
+          conclusionText =
+            "<strong>ZONA DE CRECIMIENTO:</strong> Sólido posicionamiento interno y externo. Se debe avanzar en la formalización del SLA pedagógico-operativo y la IA predictiva de onboarding.";
+        } else if (mfiSum / mefiCount < 2.5 && mefeAvg < 2.5) {
+          conclusionText =
+            "<strong>ZONA DE COSECHA / VULNERABILIDAD:</strong> Riesgos críticos asociados a AECSOFT y absentismo. Urge la desconexión del modelo estático para pasar a ser socio real de la cartera.";
+        } else if (mfiSum / mefiCount >= 2.5 && mefeAvg < 2.5) {
+          conclusionText =
+            "<strong>ZONA DE MANTENIMIENTO:</strong> Las capacidades pedagógicas internas son buenas, pero el entorno presiona. Se sugiere blindar riesgos con auditorías preventivas de la Ley 2300.";
+        } else {
+          conclusionText =
+            "<strong>ZONA DE ESTABILIZACIÓN:</strong> Entorno oportuno pero debilidades en la asimilación sistémica. Enfóquese en simulaciones de práctica SARA para recortar la curva inicial de 60 dós.";
+        }
+
+        resultsView.innerHTML = `
+        <div class="text-center py-4 space-y-3 fade-in">
+          <div class="text-3xl text-[#C0DD17]"><i class="fa-solid fa-circle-check"></i></div>
+          <h4 class="font-bold text-lg text-white">¡Evaluación de 20 Preguntas Completada!</h4>
+          <p class="text-xs text-gray-200 leading-relaxed max-w-lg mx-auto">
+            Los valores estratégicos se recalcularon y mapearon de forma interactiva en la Matriz:<br>
+            <strong>Índice Interno (MEFI):</strong> ${(mfiSum / mefiCount).toFixed(2)} / 4.00 <br>
+            <strong>Índice Externo (MEFE):</strong> ${mefeAvg.toFixed(2)} / 4.00
+          </p>
+          <div class="p-4 bg-[#012030]/50 rounded text-xs text-gray-100 max-w-md mx-auto leading-normal">
+            ${conclusionText}
+          </div>
+          <button onclick="cancelWizard()" class="mt-4 bg-white text-[#012030] font-bold py-1.5 px-4 rounded text-xs hover:bg-gray-100 transition-all">
+            Cerrar Cuestionario
+          </button>
+        </div>
+      `;
+      }
+
+      function updateMatrixValuesAndChart(mefiVal, mefeVal) {
+        const pctX = ((mefiVal - 1.0) / 3.0) * 100;
+        const pctY = ((mefeVal - 1.0) / 3.0) * 100;
+
+        const vectorDot = document.getElementById("vector-dot");
+        vectorDot.style.left = `calc(${pctX}% - 12px)`;
+        vectorDot.style.bottom = `calc(${pctY}% - 12px)`;
+
+        document.getElementById("mefi-score-display").innerText =
+          mefiVal.toFixed(2);
+        document.getElementById("mefe-score-display").innerText =
+          mefeVal.toFixed(2);
+
+        document.getElementById("f-mefi-1").innerText =
+          `${(mefiVal * 0.75).toFixed(1)} / 4.0`;
+        document.getElementById("f-mefi-2").innerText =
+          `${(mefiVal * 0.95).toFixed(1)} / 4.0`;
+        document.getElementById("f-mefi-3").innerText =
+          `${(mefiVal * 0.6).toFixed(1)} / 4.0`;
+        document.getElementById("f-mefi-4").innerText =
+          `${(mefiVal * 0.5).toFixed(1)} / 4.0`;
+
+        document.getElementById("f-mefe-1").innerText =
+          `${(mefeVal * 0.7).toFixed(1)} / 4.0`;
+        document.getElementById("f-mefe-2").innerText =
+          `${(mefeVal * 0.9).toFixed(1)} / 4.0`;
+        document.getElementById("f-mefe-3").innerText =
+          `${(mefeVal * 0.8).toFixed(1)} / 4.0`;
+
+        const quadrantText = document.getElementById("matrix-quadrant");
+        if (mefiVal >= 2.5 && mefeVal >= 2.5) {
+          quadrantText.innerText = "Zona de Inversión y Éxito";
+          quadrantText.className = "text-[#C0DD17] font-bold";
+        } else if (mefiVal < 2.5 && mefeVal < 2.5) {
+          quadrantText.innerText = "Desinversión / Vulnerabilidad";
+          quadrantText.className = "text-[#F05C05] font-bold";
+        } else if (mefiVal >= 2.5 && mefeVal < 2.5) {
+          quadrantText.innerText = "Defensa / Optimización Interna";
+          quadrantText.className = "text-yellow-500 font-bold";
+        } else {
+          quadrantText.innerText = "Estabilidad / Reajuste";
+          quadrantText.className = "text-blue-400 font-bold";
+        }
+      }
+
+      function getNumericValue(id) {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        const cleanVal = el.value
+          .toString()
+          .replace(/\./g, "")
+          .replace(/,/g, "");
+        return parseFloat(cleanVal) || 0;
+      }
+
+      function formatInputCurrency(input) {
+        const cursorPosition = input.selectionStart;
+        const initialLength = input.value.length;
+
+        const rawValue = input.value.replace(/\D/g, "");
+        if (!rawValue) {
+          input.value = "";
+          return;
+        }
+
+        const formatted = parseInt(rawValue, 10).toLocaleString("es-CO");
+        input.value = formatted;
+
+        const newLength = formatted.length;
+        const newPosition = Math.max(
+          0,
+          cursorPosition + (newLength - initialLength),
+        );
+        try {
+          input.setSelectionRange(newPosition, newPosition);
+        } catch (e) {}
+      }
+
+      function calculateROI() {
+        const trainerHourlyRate = getNumericValue("trainer-hourly-rate");
+        const trainerHours = getNumericValue("trainer-hours");
+        const trainersQty = getNumericValue("trainers-qty");
+        const agentsQty = getNumericValue("agents-qty");
+
+        const recaudoSin = getNumericValue("recaudo-sin-entrenador");
+        const recaudoCon = getNumericValue("recaudo-con-entrenador");
+        const slaTargetIncrement = getNumericValue("sla-target-increment");
+
+        // 1. Costo Total de Planta en Entrenamiento
+        const totalTrainerHours = trainerHours * trainersQty;
+        const totalCostTraining = totalTrainerHours * trainerHourlyRate;
+
+        // 2. Incremental de Recaudo Comparativo
+        const deltaPerAgent = recaudoCon - recaudoSin;
+        const totalIncrementalRecaudo = deltaPerAgent * agentsQty;
+
+        // 3. Beneficio Neto
+        const netBenefit = totalIncrementalRecaudo - totalCostTraining;
+
+        // 4. ROI
+        let roi = 0;
+        if (totalCostTraining > 0) {
+          roi = (netBenefit / totalCostTraining) * 100;
+        }
+
+        // 5. Rendimiento por Hora de Entrenador
+        let hourlyYield = 0;
+        if (totalTrainerHours > 0) {
+          hourlyYield = totalIncrementalRecaudo / totalTrainerHours;
+        }
+
+        // 6. ROE (% Cumplimiento SLA)
+        let roePercent = 0;
+        if (slaTargetIncrement > 0) {
+          roePercent = (deltaPerAgent / slaTargetIncrement) * 100;
+        }
+
+        // Actualizar UI
+        document.getElementById("cost-training-val").innerText =
+          `$${totalCostTraining.toLocaleString("es-CO")}`;
+        document.getElementById("incremental-recaudo-val").innerText =
+          `$${totalIncrementalRecaudo.toLocaleString("es-CO")}`;
+        document.getElementById("roi-val").innerText = `${roi.toFixed(0)}%`;
+        document.getElementById("net-benefit-val").innerText =
+          `$${netBenefit.toLocaleString("es-CO")}`;
+        document.getElementById("trainer-hourly-yield").innerText =
+          `$${hourlyYield.toLocaleString("es-CO", { maximumFractionDigits: 0 })}`;
+
+        const roeBadge = document.getElementById("roe-percent-badge");
+        roeBadge.innerText = `${roePercent.toFixed(0)}% Meta SLA`;
+
+        if (netBenefit < 0) {
+          document.getElementById("net-benefit-val").className =
+            "text-xl font-bold text-red-600 mt-1";
+        } else {
+          document.getElementById("net-benefit-val").className =
+            "text-xl font-bold text-green-600 mt-1";
+        }
+
+        const roeExplanation = document.getElementById("roe-explanation-txt");
+        if (slaTargetIncrement > 0) {
+          roeExplanation.innerHTML = `El incremento real por agente intervenido es de <strong>$${deltaPerAgent.toLocaleString("es-CO")}</strong> vs. la meta SLA acordada con el Líder de Operación de <strong>$${slaTargetIncrement.toLocaleString("es-CO")}</strong>. Esto demuestra un <strong>${roePercent.toFixed(0)}%</strong> de cumplimiento del retorno sobre las expectativas (ROE).`;
+        } else {
+          roeExplanation.innerHTML = `Especifique una meta de recaudo incremental en el SLA para calcular el porcentaje de cumplimiento del ROE.`;
+        }
+      }
+
+      window.onload = function () {
+        updateMatrixValuesAndChart(2.15, 1.9);
+        selectPyramidLevel(4);
+        calculateROI();
+      };
+    </script>
+  </body>
+</html>
