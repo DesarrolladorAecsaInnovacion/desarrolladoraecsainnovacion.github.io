@@ -5,11 +5,7 @@
 // Soporta archivos de audio (preguntas 2, 6 y 9)
 // ============================================================
 
-// --- Configuración de la base de datos ---
-$db_host = 'localhost';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'audiencias_db';
+
 
 // --- Directorio para almacenar audios ---
 $audioDir = __DIR__ . '/audios';
@@ -118,30 +114,20 @@ foreach ($audioQuestions as $qId) {
     }
 }
 
-// --- Conexión a la base de datos con PDO ---
-try {
-    $pdo = new PDO(
-        "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4",
-        $db_user,
-        $db_pass,
-        [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]
-    );
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Error de conexión a la base de datos.']);
-    exit;
-}
+// --- Leer textos transcritos opcionales (preguntas 2, 6, 9) ---
+$texto_p2 = isset($_POST['texto_p2']) && trim($_POST['texto_p2']) !== '' ? trim($_POST['texto_p2']) : null;
+$texto_p6 = isset($_POST['texto_p6']) && trim($_POST['texto_p6']) !== '' ? trim($_POST['texto_p6']) : null;
+$texto_p9 = isset($_POST['texto_p9']) && trim($_POST['texto_p9']) !== '' ? trim($_POST['texto_p9']) : null;
+
+// --- Conexión a la base de datos ---
+require_once __DIR__ . '/db.php';
 
 // --- Insertar el registro ---
 try {
-    $sql = "INSERT INTO quiz_resultados 
-            (nombre_usuario, puntaje, porcentaje, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, audio_p2, audio_p6, audio_p9, detalle_json) 
+    $sql = "INSERT INTO SPAEvaluacion 
+            (nombre_usuario, puntaje, porcentaje, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, audio_p2, audio_p6, audio_p9, texto_p2, texto_p6, texto_p9, detalle_json) 
             VALUES 
-            (:nombre_usuario, :puntaje, :porcentaje, :p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9, :p10, :audio_p2, :audio_p6, :audio_p9, :detalle_json)";
+            (:nombre_usuario, :puntaje, :porcentaje, :p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9, :p10, :audio_p2, :audio_p6, :audio_p9, :texto_p2, :texto_p6, :texto_p9, :detalle_json)";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
@@ -161,6 +147,9 @@ try {
         ':audio_p2'       => $audioPaths['audio_p2'],
         ':audio_p6'       => $audioPaths['audio_p6'],
         ':audio_p9'       => $audioPaths['audio_p9'],
+        ':texto_p2'       => $texto_p2,
+        ':texto_p6'       => $texto_p6,
+        ':texto_p9'       => $texto_p9,
         ':detalle_json'   => json_encode($preguntas, JSON_UNESCAPED_UNICODE),
     ]);
 
@@ -170,11 +159,11 @@ try {
         'success' => true,
         'message' => 'Resultado guardado exitosamente.',
         'id'      => intval($insertId),
-        'audios'  => $audioPaths,
+        'audios'  => $audioPaths
     ]);
 
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Error al guardar el resultado en la base de datos.']);
+    echo json_encode(['success' => false, 'error' => 'Error al guardar el resultado en la base de datos.', 'Message' => $e->getMessage()]);
     exit;
 }
