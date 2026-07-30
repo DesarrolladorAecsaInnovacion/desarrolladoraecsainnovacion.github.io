@@ -5,9 +5,9 @@
 // ============================================================
 
 $db_host = $_SERVER["BD_URL_AECSA_TEST"];
-$db_user = $_SERVER["BD_USER_AECSA_TEST"];
-$db_pass = $_SERVER["BD_PASS_AECSA_TEST"];
-$db_name = $_SERVER["BD_NAME_AECSA_TEST"];
+$db_user = $_SERVER["BD_USER_SARA_TEST"];
+$db_pass = $_SERVER["BD_PASS_SARA_TEST"];
+$db_name = $_SERVER["BD_NAME_SARA_TEST"];
 
 try {
     $pdo = new PDO(
