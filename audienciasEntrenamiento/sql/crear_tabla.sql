@@ -13,7 +13,7 @@ USE audiencias_db;
 
 CREATE TABLE IF NOT EXISTS SPAEvaluacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_usuario VARCHAR(255) NOT NULL, -- Verificar si sería foreign key
+    nombre_usuario INT NOT NULL COMMENT 'ID del usuario (FK a usuarios.id)',
     puntaje TINYINT UNSIGNED NOT NULL COMMENT 'Nota obtenida (0-10)',
     porcentaje TINYINT UNSIGNED NOT NULL COMMENT 'Porcentaje (0-100)',
     p1 TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Pregunta 1 - Conciliación (V/F)',
@@ -33,11 +33,6 @@ CREATE TABLE IF NOT EXISTS SPAEvaluacion (
     texto_p6 TEXT NULL COMMENT 'Texto respuesta - Pregunta 6',
     texto_p9 TEXT NULL COMMENT 'Texto respuesta - Pregunta 9',
     detalle_json JSON NULL COMMENT 'Arreglo completo de resultados por pregunta',
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del registro'
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del registro',
+    CONSTRAINT fk_spaevaluacion_usuario FOREIGN KEY (nombre_usuario) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- En caso de que la tabla ya exista en la base de datos, ejecutar:
--- ALTER TABLE SPAEvaluacion
---   ADD COLUMN texto_p2 TEXT NULL COMMENT 'Texto respuesta - Pregunta 2' AFTER audio_p9,
---   ADD COLUMN texto_p6 TEXT NULL COMMENT 'Texto respuesta - Pregunta 6' AFTER texto_p2,
---   ADD COLUMN texto_p9 TEXT NULL COMMENT 'Texto respuesta - Pregunta 9' AFTER texto_p6;
