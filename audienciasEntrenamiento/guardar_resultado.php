@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // --- Leer datos del FormData (nombre_usuario almacena el ID del usuario) ---
 $nombre_usuario = trim($_POST['nombre_usuario'] ?? ''); 
 if ($nombre_usuario === '') {
-    $nombre_usuario = trim(strval($_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? ''));
+    $nombre_usuario = trim(strval($_SESSION['id'] ?? ''));
 }
 $puntaje        = isset($_POST['puntaje']) ? intval($_POST['puntaje']) : -1;
 $porcentaje     = isset($_POST['porcentaje']) ? intval($_POST['porcentaje']) : -1;

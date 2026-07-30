@@ -3,9 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$idUsuario     = $_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? '';
-$nombreUsuario = $_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? $_SESSION['nombre_completo'] ?? $_SESSION['usuario'] ?? $_SESSION['user_name'] ?? '';
-$rolUsuario    = $_SESSION['rol'] ?? $_SESSION['rol_usuario'] ?? $_SESSION['user_rol'] ?? $_SESSION['role'] ?? '';
+$idUsuario     = $_SESSION['id'] ?? '';
+$nombreUsuario = $_SESSION['correo'] ?? '';
+$rolUsuario    = $_SESSION['rol'] ?? '';
 ?>
 <!doctype html>
 <html lang="es" class="h-full bg-[#F4F5F6]">
