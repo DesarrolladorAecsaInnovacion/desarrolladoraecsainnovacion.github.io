@@ -1,3 +1,11 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$idUsuario = $_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? '';
+$nombreUsuario = $_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? $_SESSION['nombre_completo'] ?? $_SESSION['usuario'] ?? $_SESSION['user_name'] ?? '';
+?>
 <!doctype html>
 <html lang="es" class="h-full bg-[#F4F5F6]">
   <head>
@@ -314,6 +322,14 @@
               Demuestra tu solvencia legal, capacidad de reacción verbal y toma
               de decisiones completando los 10 desafíos interactivos locales.
             </p>
+            <div class="pt-2 flex items-center justify-center">
+              <div id="quiz-user-badge" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-aecsaNavy shadow-sm <?php echo empty($nombreUsuario) ? 'hidden' : ''; ?>">
+                <i class="fa-solid fa-user-check text-aecsaGreenDark text-sm"></i>
+                <span>Usuario en sesión: <strong id="quiz-user-name-display" class="font-extrabold text-aecsaNavy"><?php echo htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+              </div>
+            </div>
+            <input type="hidden" id="user-id-input" value="<?php echo htmlspecialchars($idUsuario, ENT_QUOTES, 'UTF-8'); ?>" />
+            <input type="hidden" id="user-name-input" value="<?php echo htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8'); ?>" />
           </div>
 
           <!-- Quiz Progress Bar -->

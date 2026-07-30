@@ -1567,11 +1567,13 @@ function submitQuiz() {
   if (resultsDiv) resultsDiv.scrollIntoView({ behavior: "smooth" });
 
   // --- Enviar resultados al backend para guardar en MySQL ---
-  const nombreUsuario = (
-    document.getElementById("script-name")?.value || ""
+  const userId = (
+    document.getElementById("user-id-input")?.value ||
+    document.getElementById("script-name")?.value ||
+    ""
   ).trim();
   const formData = new FormData();
-  formData.append("nombre_usuario", nombreUsuario || "Anonimo");
+  formData.append("nombre_usuario", userId);
   formData.append("puntaje", score);
   formData.append("porcentaje", scorePct);
   formData.append("preguntas", JSON.stringify(questionResults));
@@ -1855,9 +1857,14 @@ function renderDetalleModal(ev, container) {
     const isAudioOrText = [2, 6, 9].includes(i);
     const audioField = `audio_p${i}`;
     const textField = `texto_p${i}`;
-    const hasAudio = isAudioOrText && ev[audioField + "_exists"] && ev[audioField];
+    const hasAudio =
+      isAudioOrText && ev[audioField + "_exists"] && ev[audioField];
     const textVal = isAudioOrText
-      ? (ev[textField] || (ev.detalle || []).find((d) => d.id === i)?.userText || "").trim()
+      ? (
+          ev[textField] ||
+          (ev.detalle || []).find((d) => d.id === i)?.userText ||
+          ""
+        ).trim()
       : "";
     const hasText = textVal.length > 0;
 

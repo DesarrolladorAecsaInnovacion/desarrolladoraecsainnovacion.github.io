@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // ============================================================
 // guardar_resultado.php
 // Backend para almacenar resultados del quiz en MySQL
@@ -29,8 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// --- Leer datos del FormData ---
-$nombre_usuario = trim($_POST['nombre_usuario'] ?? ''); //Variable de sesion usuario
+// --- Leer datos del FormData (nombre_usuario almacena el ID del usuario) ---
+$nombre_usuario = trim($_POST['nombre_usuario'] ?? ''); 
+if ($nombre_usuario === '') {
+    $nombre_usuario = trim(strval($_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? ''));
+}
 $puntaje        = isset($_POST['puntaje']) ? intval($_POST['puntaje']) : -1;
 $porcentaje     = isset($_POST['porcentaje']) ? intval($_POST['porcentaje']) : -1;
 $preguntasJSON  = $_POST['preguntas'] ?? '';
@@ -39,7 +45,7 @@ $preguntas      = json_decode($preguntasJSON, true);
 // --- Validar campos requeridos ---
 if ($nombre_usuario === '') {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'El nombre del usuario es obligatorio.']);
+    echo json_encode(['success' => false, 'error' => 'El ID del usuario es obligatorio. No se ha iniciado sesión.']);
     exit;
 }
 
