@@ -3,8 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$idUsuario = $_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? '';
+$idUsuario     = $_SESSION['id_usuario'] ?? $_SESSION['id'] ?? $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? '';
 $nombreUsuario = $_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? $_SESSION['nombre_completo'] ?? $_SESSION['usuario'] ?? $_SESSION['user_name'] ?? '';
+$rolUsuario    = $_SESSION['rol'] ?? $_SESSION['rol_usuario'] ?? $_SESSION['user_rol'] ?? $_SESSION['role'] ?? '';
 ?>
 <!doctype html>
 <html lang="es" class="h-full bg-[#F4F5F6]">
@@ -78,7 +79,8 @@ $nombreUsuario = $_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? $_SESSION
             <i class="fa-solid fa-award mr-1.5"></i>Evaluación final (10
             pruebas)
           </button>
-          <!-- Validar permiso de usuario adminsitrador con variable de sesión -->
+          <!-- Validar permiso de usuario administrador con variable de sesión -->
+          <?php if ((string)$rolUsuario === '99'): ?>
           <button
             onclick="switchMainTab('reportes')"
             id="btn-tab-reportes"
@@ -86,6 +88,7 @@ $nombreUsuario = $_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? $_SESSION
           >
             <i class="fa-solid fa-chart-line mr-1.5"></i>Reportes
           </button>
+          <?php endif; ?>
         </nav>
       </div>
     </header>
