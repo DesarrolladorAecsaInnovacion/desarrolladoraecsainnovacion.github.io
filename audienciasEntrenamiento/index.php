@@ -70,6 +70,7 @@
             <i class="fa-solid fa-award mr-1.5"></i>Evaluación final (10
             pruebas)
           </button>
+          <!-- Validar permiso de usuario adminsitrador con variable de sesión -->
           <button
             onclick="switchMainTab('reportes')"
             id="btn-tab-reportes"

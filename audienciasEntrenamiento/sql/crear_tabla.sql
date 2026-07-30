@@ -13,7 +13,7 @@ USE audiencias_db;
 
 CREATE TABLE IF NOT EXISTS SPAEvaluacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_usuario VARCHAR(255) NOT NULL,
+    nombre_usuario VARCHAR(255) NOT NULL, -- Verificar si sería foreign key
     puntaje TINYINT UNSIGNED NOT NULL COMMENT 'Nota obtenida (0-10)',
     porcentaje TINYINT UNSIGNED NOT NULL COMMENT 'Porcentaje (0-100)',
     p1 TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Pregunta 1 - Conciliación (V/F)',

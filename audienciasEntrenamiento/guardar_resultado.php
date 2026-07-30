@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // --- Leer datos del FormData ---
-$nombre_usuario = trim($_POST['nombre_usuario'] ?? '');
+$nombre_usuario = trim($_POST['nombre_usuario'] ?? ''); //Variable de sesion usuario
 $puntaje        = isset($_POST['puntaje']) ? intval($_POST['puntaje']) : -1;
 $porcentaje     = isset($_POST['porcentaje']) ? intval($_POST['porcentaje']) : -1;
 $preguntasJSON  = $_POST['preguntas'] ?? '';
