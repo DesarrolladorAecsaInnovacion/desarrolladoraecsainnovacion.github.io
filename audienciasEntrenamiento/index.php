@@ -539,6 +539,6 @@ $rolUsuario    = $_SESSION['rol'] ?? '';
         <p class="text-aecsaGreen font-script text-base">Contigo Siempre</p>
       </div>
     </footer>
-    <script src="js/index.js"></script>
+    <script src="js/index.js?id=1.0.1"></script>
   </body>
 </html>
