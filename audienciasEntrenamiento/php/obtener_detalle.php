@@ -38,7 +38,7 @@ try {
     $audioFields = ['audio_p2', 'audio_p6', 'audio_p9'];
     foreach ($audioFields as $field) {
         if (!empty($evaluacion[$field])) {
-            $filePath = __DIR__ . '/' . $evaluacion[$field];
+            $filePath = dirname(__DIR__) . '/' . $evaluacion[$field];
             $evaluacion[$field . '_exists'] = file_exists($filePath);
         } else {
             $evaluacion[$field . '_exists'] = false;

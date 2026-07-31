@@ -8,10 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
 // Soporta archivos de audio (preguntas 2, 6 y 9)
 // ============================================================
 
-
-
 // --- Directorio para almacenar audios ---
-$audioDir = __DIR__ . '/audios';
+$audioDir = dirname(__DIR__) . '/audios';
 
 // --- Headers CORS y JSON ---
 header('Content-Type: application/json; charset=utf-8');

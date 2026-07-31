@@ -1595,7 +1595,7 @@ function submitQuiz() {
     }
   });
 
-  fetch("guardar_resultado.php", {
+  fetch("php/guardar_resultado.php", {
     method: "POST",
     body: formData,
   })
@@ -1687,7 +1687,7 @@ function loadReportes() {
     </div>
   `;
 
-  fetch("obtener_evaluaciones.php")
+  fetch("php/obtener_evaluaciones.php")
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
@@ -1802,7 +1802,7 @@ function verDetalleEvaluacion(id) {
   `;
   modal.classList.remove("hidden");
 
-  fetch(`obtener_detalle.php?id=${id}`)
+  fetch(`php/obtener_detalle.php?id=${id}`)
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
